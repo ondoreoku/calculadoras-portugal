@@ -44,6 +44,28 @@ from utils.salario import calcular_salario
 from utils.rescisao import calcular_rescisao
 
 DATABASE = "database.db"
+
+
+# =============================================================================
+# INICIALIZACAO AUTOMATICA DA BASE DE DADOS
+# =============================================================================
+# No Render (producao), o database.db nao sobe pelo Git (esta no .gitignore).
+# Esta funcao cria a base de dados automaticamente se nao existir.
+# =============================================================================
+import os
+
+def init_db_if_missing():
+    """Cria a base de dados se nao existir (necessario no Render)."""
+    if not os.path.exists(DATABASE):
+        print("[INFO] Base de dados nao encontrada. A criar...")
+        import initdb
+        initdb.create_tables()
+        initdb.seed_taxas()
+        print("[OK] Base de dados criada com sucesso")
+
+# Chama no arranque da aplicacao
+init_db_if_missing()
+
 app = Flask(__name__)
 
 
@@ -316,8 +338,6 @@ def subsidio():
 # =============================================================================
 # INICIALIZAÇÃO DO SERVIDOR
 # =============================================================================
-import os
-
 if __name__ == "__main__":
     print("=" * 60)
     print("  Calculadoras Portugal 2026")
