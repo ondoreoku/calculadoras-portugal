@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Calculadora de Salário Líquido 2026{% endblock %}
+{% block title %}Calculadora de Salario Liquido 2026{% endblock %}
 {% block main_class %}form-page{% endblock %}
 
 {% block content %}
     <div class="container">
-        <h1>Calculadora de Salário Líquido 2026</h1>
-        <p class="subtitulo">Calcula o teu salário após descontos de IRS e Segurança Social</p>
+        <h1>Calculadora de Salario Liquido 2026</h1>
+        <p class="subtitulo">Calcula o teu salario apos descontos de IRS e Seguranca Social</p>
 
         <section class="form-card">
             <form method="POST" action="/salario">
-                {# Seleção do regime #}
+                {# Selecao do regime #}
                 <div class="input-group full-width" style="margin-bottom: 20px;">
                     <label>Regime de Trabalho</label>
                     <select name="regime" id="regime-select" onchange="toggleRegime()">
@@ -22,7 +22,7 @@
                 <div class="grid">
                     {# Campo comum: bruto #}
                     <div class="input-group">
-                        <label>Salário Bruto Mensal (€)</label>
+                        <label>Salario Bruto Mensal (€)</label>
                         <input type="number" name="bruto" step="0.01" min="0" required 
                                value="{{ bruto or 1500 }}" placeholder="Ex: 1500.00">
                     </div>
@@ -30,7 +30,7 @@
                     {# Campos para conta de outrem #}
                     <div id="campos-outrem" class="sub-grid">
                         <div class="input-group">
-                            <label>Subsídio Alimentação (€/dia)</label>
+                            <label>Subsidio Alimentacao (€/dia)</label>
                             <input type="number" name="subsidio_alimentacao" step="0.01" min="0" 
                                    value="{{ subsidio_alimentacao or 6.0 }}" placeholder="Ex: 6.00">
                         </div>
@@ -51,28 +51,28 @@
                                    value="{{ coeficiente_atividade or 0.75 }}" placeholder="Ex: 0.75">
                         </div>
                         <div class="input-group">
-                            <label>Retenção IRS (%)</label>
+                            <label>Retencao IRS (%)</label>
                             <input type="number" name="retencao_irs" step="0.01" min="0" max="1" 
                                    value="{{ retencao_irs or 0.15 }}" placeholder="Ex: 0.15">
                         </div>
                         <div class="input-group full-width">
-                            <label>Isento de Segurança Social?</label>
+                            <label>Isento de Seguranca Social?</label>
                             <select name="isento_ss">
-                                <option value="nao" {% if isento_ss == 'nao' %}selected{% endif %}>Não</option>
+                                <option value="nao" {% if isento_ss == 'nao' %}selected{% endif %}>Nao</option>
                                 <option value="sim" {% if isento_ss == 'sim' %}selected{% endif %}>Sim</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-main">Calcular Salário</button>
+                <button type="submit" class="btn-main">Calcular Salario</button>
             </form>
 
             {% if resultado %}
             <div class="resultados visible" style="margin-top: 25px;">
                 <div class="grid-res">
                     <div class="res-card">
-                        <small>Salário Líquido</small>
+                        <small>Salario Liquido</small>
                         <div class="big-val">€{{ "%.2f"|format(resultado.liquido) }}</div>
                     </div>
                     <div class="res-card">
@@ -82,11 +82,11 @@
                 </div>
 
                 <div class="info-extra">
-                    <p><strong>Salário Bruto:</strong> €{{ "%.2f"|format(resultado.bruto) }}</p>
-                    <p><strong>Segurança Social:</strong> €{{ "%.2f"|format(resultado.seguranca_social) }}</p>
+                    <p><strong>Salario Bruto:</strong> €{{ "%.2f"|format(resultado.bruto) }}</p>
+                    <p><strong>Seguranca Social:</strong> €{{ "%.2f"|format(resultado.seguranca_social) }}</p>
                     <p><strong>IRS:</strong> €{{ "%.2f"|format(resultado.irs) }}</p>
                     {% if resultado.subsidio_alimentacao %}
-                    <p><strong>Subsídio Alimentação:</strong> €{{ "%.2f"|format(resultado.subsidio_alimentacao) }}</p>
+                    <p><strong>Subsidio Alimentacao:</strong> €{{ "%.2f"|format(resultado.subsidio_alimentacao) }}</p>
                     {% endif %}
                     {% if resultado.taxa_efetiva_irs %}
                     <p><strong>Taxa Efetiva IRS:</strong> {{ resultado.taxa_efetiva_irs }}%</p>
@@ -95,8 +95,14 @@
                     <p><strong>Coeficiente:</strong> {{ resultado.coeficiente }}</p>
                     {% endif %}
                     {% if resultado.rendimento_tributavel %}
-                    <p><strong>Rendimento Tributável:</strong> €{{ "%.2f"|format(resultado.rendimento_tributavel) }}</p>
+                    <p><strong>Rendimento Tributavel:</strong> €{{ "%.2f"|format(resultado.rendimento_tributavel) }}</p>
                     {% endif %}
+                </div>
+
+                {# Buy Me a Coffee #}
+                <div class="bmc-container" style="text-align: center; margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 10px; border: 1px solid #059669;">
+                    <p style="margin: 0 0 10px 0; color: #374151; font-size: 0.95rem;">Esta calculadora foi util?</p>
+                    <a href="https://www.buymeacoffee.com/ondoreoku" target="_blank" style="display: inline-block; background: #059669; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">Paga-me um cafe</a>
                 </div>
             </div>
             {% endif %}
@@ -108,7 +114,7 @@
             var regime = document.getElementById('regime-select').value;
             var outrem = document.getElementById('campos-outrem');
             var eni = document.getElementById('campos-eni');
-            
+
             if (regime === 'outrem') {
                 outrem.style.display = 'grid';
                 eni.style.display = 'none';
@@ -117,8 +123,7 @@
                 eni.style.display = 'grid';
             }
         }
-        
-        // Executar no carregamento da página
+
         window.onload = toggleRegime;
     </script>
 {% endblock %}
