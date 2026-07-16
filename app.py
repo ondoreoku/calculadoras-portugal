@@ -61,6 +61,16 @@ def init_db_if_missing():
         import initdb
         initdb.create_tables()
         initdb.seed_taxas()
+        # Busca noticias automaticamente no primeiro arranque
+        # Assim o utilizador ve noticias reais desde o primeiro acesso
+        print("[INFO] A buscar noticias do RSS...")
+        from utils.noticias import atualizar_noticias, limpar_cache_antigo
+        try:
+            inseridas = atualizar_noticias()
+            limpar_cache_antigo()
+            print(f"[OK] {inseridas} noticias inseridas automaticamente")
+        except Exception as e:
+            print(f"[AVISO] Nao foi possivel atualizar noticias: {e}")
         print("[OK] Base de dados criada com sucesso")
 
 # Chama no arranque da aplicacao
