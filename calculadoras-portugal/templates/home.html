@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{# ========================================================================== #}
+{# BLOCO: title                                                               #}
+{# Substitui o título padrão da base.html para esta página específica.        #}
+{# ========================================================================== #}
+{% block title %}Início — Calculadoras Portugal 2026{% endblock %}
+
+{# ========================================================================== #}
+{# BLOCO: main_class                                                          #}
+{# Adiciona a classe CSS "home" ao elemento <main> para estilos específicos.  #}
+{# ========================================================================== #}
+{% block main_class %}home{% endblock %}
+
+{# ========================================================================== #}
+{# BLOCO: content                                                             #}
+{# Conteúdo principal da página. Inclui:                                      #}
+{#   — Título e subtítulo                                                     #}
+{#   — 4 cards das calculadoras (grid 4 colunas)                              #}
+{#   — Feed de notícias dinâmicas (vindas do SQLite via app.py)                 #}
+{# ========================================================================== #}
+{% block content %}
+    <div class="container">
+        {# Título principal da página #}
+        <h1>Escolhe uma Calculadora</h1>
+        <p class="subtitulo">Ferramentas financeiras para Portugal em 2026</p>
+
+        {# ========================================================================== #}
+        {# SECÇÃO: CARDS DAS CALCULADORAS                                           #}
+        {# Grid com 4 colunas (desktop), 2 (tablet), 1 (mobile).                    #}
+        {# Cada card é um link clicável que leva à respetiva calculadora.           #}
+        {# ========================================================================== #}
+        <section class="sugestoes">
+            {# Card 1: Salário Líquido #}
+            <a href="/salario" class="card-link">
+                <div class="card">
+                    <h2>Salário Líquido</h2>
+                    <p>Calcula o teu salário após descontos de IRS e Segurança Social</p>
+                    <span class="card-acao">Calcular &rarr;</span>
+                </div>
+            </a>
+
+            {# Card 2: Crédito Habitação #}
+            <a href="/credito" class="card-link">
+                <div class="card">
+                    <h2>Crédito Habitação</h2>
+                    <p>Calcula a prestação mensal do teu empréstimo bancário</p>
+                    <span class="card-acao">Calcular &rarr;</span>
+                </div>
+            </a>
+
+            {# Card 3: Rescisão #}
+            <a href="/rescisao" class="card-link">
+                <div class="card">
+                    <h2>Rescisão</h2>
+                    <p>Calcula a indemnização no fim do contrato de trabalho</p>
+                    <span class="card-acao">Calcular &rarr;</span>
+                </div>
+            </a>
+
+            {# Card 4: Subsídio Desemprego #}
+            <a href="/subsidio" class="card-link">
+                <div class="card">
+                    <h2>Subsídio Desemprego</h2>
+                    <p>Calcula o valor do apoio em caso de desemprego</p>
+                    <span class="card-acao">Calcular &rarr;</span>
+                </div>
+            </a>
+        </section>
+
+        {# ========================================================================== #}
+        {# SECÇÃO: FEED DE NOTÍCIAS                                                 #}
+        {# Recebe a variável 'noticias' passada pelo app.py.                        #}
+        {# Cada notícia tem: titulo, resumo, url, fonte, categoria, data            #}
+        {#                                                                            #}
+        {# ESTRUTURA DO CARD DE NOTÍCIA:                                            #}
+        {#   — Tag de categoria (canto superior)                                      #}
+        {#   — Título da notícia                                                    #}
+        {#   — Resumo (texto breve)                                                 #}
+        {#   — Rodapé: fonte · data · "Ler mais →"                                  #}
+        {#                                                                            #}
+        {# ALINHAMENTO DAS DATAS:                                                   #}
+        {#   O card usa flexbox com flex-direction: column.                           #}
+        {#   O rodapé tem margin-top: auto para ficar sempre no fundo.               #}
+        {#   Isto resolve o problema de alinhamento quando os resumos têm           #}
+        {#   comprimentos diferentes.                                               #}
+        {# ========================================================================== #}
+        <section class="noticias">
+            <div class="noticias-header">
+                <h2>Notícias Relevantes</h2>
+                {# Link para atualizar notícias manualmente #}
+                <a href="/atualizar_noticias" class="atualizar-link">Atualizar feed</a>
+            </div>
+
+            <div class="noticias-grid">
+                {# Loop Jinja2: itera sobre a lista de notícias #}
+                {# noticias é passada pelo app.py (get_noticias()) #}
+                {% for noticia in noticias %}
+                <article class="noticia">
+                    {# Tag de categoria (ex: "Economia", "Habitação", "Trabalho") #}
+                    <span class="noticia-categoria">{{ noticia.categoria }}</span>
+
+                    {# Título da notícia com link para o artigo original #}
+                    {# target="_blank" abre num novo separador (definido em base.html) #}
+                    <h3>
+                        <a href="{{ noticia.url }}" class="noticia-titulo-link">
+                            {{ noticia.titulo }}
+                        </a>
+                    </h3>
+
+                    {# Resumo da notícia (já limpo de HTML no noticias.py) #}
+                    <p>{{ noticia.resumo }}</p>
+
+                    {# Rodapé do card: alinhado no fundo graças ao flexbox #}
+                    {# margin-top: auto no CSS empurra isto para o fundo #}
+                    <div class="noticia-rodape">
+                        <span class="noticia-meta">
+                            {# Fonte da notícia (ex: "ECO", "Jornal de Negócios") #}
+                            {{ noticia.fonte }}
+                            {# Separador visual · (ponto médio) #}
+                            <span class="separador">·</span>
+                            {# Data de publicação (ex: "16 Jul 2026") #}
+                            {{ noticia.data }}
+                        </span>
+                        {# Link "Ler mais" para o artigo original #}
+                        <a href="{{ noticia.url }}" class="ler-mais">Ler mais &rarr;</a>
+                    </div>
+                </article>
+
+                {# Se não houver notícias, mostra mensagem #}
+                {% else %}
+                <article class="noticia noticia-vazia">
+                    <p>Sem notícias disponíveis de momento. 
+                    <a href="/atualizar_noticias">Atualizar feed</a></p>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+{% endblock %}

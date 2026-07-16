@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Simulador de Crédito Habitação 2026{% endblock %}
+{% block main_class %}form-page{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Simulador de Crédito Habitação 2026</h1>
+        <p class="subtitulo">Calcula a prestação mensal do teu empréstimo bancário</p>
+
+        <section class="form-card">
+            <form method="POST" action="/credito">
+                <div class="grid">
+                    <div class="input-group">
+                        <label>Valor do Imóvel (€)</label>
+                        <input type="number" name="valor_imovel" step="0.01" min="0" required 
+                               value="200000" placeholder="Ex: 200000.00">
+                    </div>
+                    <div class="input-group">
+                        <label>Entrada Inicial (€)</label>
+                        <input type="number" name="entrada" step="0.01" min="0" required 
+                               value="40000" placeholder="Ex: 40000.00">
+                    </div>
+                    <div class="input-group">
+                        <label>Prazo (anos)</label>
+                        <input type="number" name="prazo_anos" min="1" max="50" required 
+                               value="30" placeholder="Ex: 30">
+                    </div>
+                    <div class="input-group">
+                        <label>Spread do Banco (%)</label>
+                        <input type="number" name="spread" step="0.01" min="0" required 
+                               value="1.5" placeholder="Ex: 1.5">
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Euribor Atual (%)</label>
+                        <input type="number" name="euribor" step="0.01" min="0" required 
+                               value="3.5" placeholder="Ex: 3.5">
+                    </div>
+                </div>
+                <button type="submit" class="btn-main">Calcular Prestação</button>
+            </form>
+
+            {% if resultado %}
+            <div class="resultados visible" style="margin-top: 25px;">
+                <div class="grid-res">
+                    <div class="res-card">
+                        <small>Prestação Mensal</small>
+                        <div class="big-val">€{{ "%.2f"|format(resultado.prestacao_mensal) }}</div>
+                    </div>
+                    <div class="res-card">
+                        <small>Montante Financiado</small>
+                        <div class="big-val" style="color: #3b82f6;">€{{ "%.2f"|format(resultado.montante_financiado) }}</div>
+                    </div>
+                </div>
+
+                <div class="info-extra">
+                    <p><strong>Valor do Imóvel:</strong> €{{ "%.2f"|format(resultado.valor_imovel) }}</p>
+                    <p><strong>Entrada:</strong> €{{ "%.2f"|format(resultado.entrada) }}</p>
+                    <p><strong>Taxa Anual:</strong> {{ resultado.taxa_anual }}%</p>
+                    <p><strong>Número de Prestações:</strong> {{ resultado.numero_prestacoes }}</p>
+                    <p><strong>MTIC (Total Pago):</strong> €{{ "%.2f"|format(resultado.mtic) }}</p>
+                    <p><strong>Total de Juros:</strong> €{{ "%.2f"|format(resultado.total_juros) }}</p>
+                </div>
+
+                {% if tabela %}
+                <div class="tabela-amortizacao" style="margin-top: 25px;">
+                    <h3>Tabela de Amortização (Primeiros 12 Meses)</h3>
+                    <div class="historico-tabela-wrapper">
+                        <table class="historico-tabela">
+                            <thead>
+                                <tr>
+                                    <th>Mês</th>
+                                    <th>Prestação</th>
+                                    <th>Capital</th>
+                                    <th>Juros</th>
+                                    <th>Saldo Devedor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for linha in tabela %}
+                                <tr>
+                                    <td>{{ linha.mes }}</td>
+                                    <td>€{{ "%.2f"|format(linha.prestacao) }}</td>
+                                    <td>€{{ "%.2f"|format(linha.capital) }}</td>
+                                    <td>€{{ "%.2f"|format(linha.juros) }}</td>
+                                    <td>€{{ "%.2f"|format(linha.saldo_devedor) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}

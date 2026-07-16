@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Calculadora de Rescisão 2026{% endblock %}
+{% block main_class %}form-page{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Calculadora de Rescisão de Contrato 2026</h1>
+        <p class="subtitulo">Calcula a indemnização no fim do contrato de trabalho</p>
+
+        <section class="form-card">
+            <form method="POST" action="/rescisao">
+                <div class="grid">
+                    <div class="input-group">
+                        <label>Vencimento Base Mensal (€)</label>
+                        <input type="number" name="vencimento_base" step="0.01" min="0" required 
+                               value="{{ vencimento_base or 1200 }}" placeholder="Ex: 1200.00">
+                    </div>
+                    <div class="input-group">
+                        <label>Subsídio Alimentação (€/dia)</label>
+                        <input type="number" name="subsidio_alimentacao" step="0.01" min="0" 
+                               value="{{ subsidio_alimentacao or 6.0 }}" placeholder="Ex: 6.00">
+                    </div>
+                    <div class="input-group">
+                        <label>Data de Início</label>
+                        <input type="date" name="data_inicio" required 
+                               value="{{ data_inicio or '2020-01-15' }}">
+                    </div>
+                    <div class="input-group">
+                        <label>Data de Fim</label>
+                        <input type="date" name="data_fim" required 
+                               value="{{ data_fim or '2026-07-16' }}">
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Motivo da Rescisão</label>
+                        <select name="motivo">
+                            <option value="caducidade_termo" {% if motivo == 'caducidade_termo' %}selected{% endif %}>Caducidade de Termo</option>
+                            <option value="despedimento_coletivo" {% if motivo == 'despedimento_coletivo' %}selected{% endif %}>Despedimento Coletivo</option>
+                            <option value="justa_causa_trabalhador" {% if motivo == 'justa_causa_trabalhador' %}selected{% endif %}>Justa Causa (Trabalhador)</option>
+                            <option value="mutuo_acordo" {% if motivo == 'mutuo_acordo' %}selected{% endif %}>Mútuo Acordo</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Meses em Lay-off</label>
+                        <input type="number" name="meses_layoff" min="0" 
+                               value="{{ meses_layoff or 0 }}" placeholder="Ex: 0">
+                    </div>
+                    <div class="input-group">
+                        <label>Férias Vencidas (dias)</label>
+                        <input type="number" name="ferias_vencidas" min="0" 
+                               value="{{ ferias_vencidas or 0 }}" placeholder="Ex: 5">
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Horas de Formação</label>
+                        <input type="number" name="horas_formacao" min="0" 
+                               value="{{ horas_formacao or 0 }}" placeholder="Ex: 10">
+                    </div>
+                </div>
+                <button type="submit" class="btn-main">Calcular Rescisão</button>
+            </form>
+
+            {% if resultado %}
+            <div class="resultados visible" style="margin-top: 25px;">
+                <div class="grid-res">
+                    <div class="res-card">
+                        <small>Total a Receber</small>
+                        <div class="big-val">€{{ "%.2f"|format(resultado.total) }}</div>
+                    </div>
+                    <div class="res-card">
+                        <small>Anos de Trabalho</small>
+                        <div class="big-val" style="color: #3b82f6; font-size: 1.4rem;">{{ resultado.anos_trabalho }} anos</div>
+                    </div>
+                </div>
+
+                <div class="info-extra">
+                    <p><strong>Compensação Antiguidade:</strong> €{{ "%.2f"|format(resultado.compensacao_antiguidade) }}</p>
+                    <p><strong>Proporcional Natal:</strong> €{{ "%.2f"|format(resultado.proporcional_natal) }}</p>
+                    <p><strong>Proporcional Férias:</strong> €{{ "%.2f"|format(resultado.proporcional_ferias) }}</p>
+                    <p><strong>Férias Não Gozadas:</strong> €{{ "%.2f"|format(resultado.ferias_nao_gozadas) }}</p>
+                    <p><strong>Formação:</strong> €{{ "%.2f"|format(resultado.formacao) }}</p>
+                    <p><strong>Último Mês:</strong> €{{ "%.2f"|format(resultado.ultimo_mes) }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}

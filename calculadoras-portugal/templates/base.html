@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Calculadoras Portugal 2026{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+<base target="_self">
+</head>
+<body>
+    <header>
+        <nav>
+            <h1><a href="/">Calculadoras Portugal <span>2026</span></a></h1>
+            <ul>
+                <li><a href="/salario">Salário</a></li>
+                <li><a href="/credito">Crédito</a></li>
+                <li><a href="/rescisao">Rescisão</a></li>
+                <li><a href="/subsidio">Desemprego</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="{% block main_class %}{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>© 2026 Calculadoras Portugal 2026</p>
+    </footer>
+</body>
+</html>

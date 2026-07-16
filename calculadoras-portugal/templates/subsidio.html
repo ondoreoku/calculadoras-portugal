@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Simulador Subsídio Desemprego 2026{% endblock %}
+
+{% block main_class %}form-page{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Simulador de Subsídio de Desemprego 2026</h1>
+        <p>Calcule o valor mensal e a duração do apoio com base nos descontos efetuados.</p>
+
+        <section class="form-card">
+            <form method="POST" action="/subsidio">
+                <div class="grid">
+                    <div class="input-group full-width">
+                        <label>Média dos Salários Brutos (Últimos 12 meses)</label>
+                        <input type="number" name="media_salarial" step="0.01" min="0" required 
+                               value="1200" placeholder="Ex: 1200.00">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Idade do Beneficiário</label>
+                        <input type="number" name="idade" min="16" max="100" required 
+                               value="30" placeholder="Ex: 30">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Meses de Descontos (Últimos 24 meses)</label>
+                        <input type="number" name="meses_desconto" min="0" required 
+                               value="12" placeholder="Ex: 12">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-main">Calcular Apoio</button>
+            </form>
+
+            {% if resultado %}
+            <div class="resultados visible" style="margin-top: 25px;">
+                <div class="grid-res">
+                    <div class="res-card">
+                        <small>Valor Mensal Est.</small>
+                        <div class="big-val">€{{ "%.2f"|format(resultado.valor_mensal) }}</div>
+                    </div>
+                    <div class="res-card">
+                        <small>Duração do Apoio</small>
+                        <div class="big-val" style="color: #3b82f6; font-size: 1.2rem;">{{ resultado.duracao }}</div>
+                    </div>
+                </div>
+
+                <div class="info-extra">
+                    <p><strong>IAS 2026:</strong> €{{ "%.2f"|format(resultado.ias) }}</p>
+                    <p><strong>Limite Mínimo:</strong> €{{ "%.2f"|format(resultado.limite_min) }}</p>
+                    <p><strong>Limite Máximo:</strong> €{{ "%.2f"|format(resultado.limite_max) }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}

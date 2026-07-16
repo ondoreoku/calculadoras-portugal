@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Calculadora de Salário Líquido 2026{% endblock %}
+{% block main_class %}form-page{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Calculadora de Salário Líquido 2026</h1>
+        <p class="subtitulo">Calcula o teu salário após descontos de IRS e Segurança Social</p>
+
+        <section class="form-card">
+            <form method="POST" action="/salario">
+                {# Seleção do regime #}
+                <div class="input-group full-width" style="margin-bottom: 20px;">
+                    <label>Regime de Trabalho</label>
+                    <select name="regime" id="regime-select" onchange="toggleRegime()">
+                        <option value="outrem" {% if regime == 'outrem' %}selected{% endif %}>Conta de Outrem</option>
+                        <option value="eni" {% if regime == 'eni' %}selected{% endif %}>Trabalhador Independente (ENI)</option>
+                    </select>
+                </div>
+
+                <div class="grid">
+                    {# Campo comum: bruto #}
+                    <div class="input-group">
+                        <label>Salário Bruto Mensal (€)</label>
+                        <input type="number" name="bruto" step="0.01" min="0" required 
+                               value="{{ bruto or 1500 }}" placeholder="Ex: 1500.00">
+                    </div>
+
+                    {# Campos para conta de outrem #}
+                    <div id="campos-outrem" class="sub-grid">
+                        <div class="input-group">
+                            <label>Subsídio Alimentação (€/dia)</label>
+                            <input type="number" name="subsidio_alimentacao" step="0.01" min="0" 
+                                   value="{{ subsidio_alimentacao or 6.0 }}" placeholder="Ex: 6.00">
+                        </div>
+                        <div class="input-group">
+                            <label>Estado Civil</label>
+                            <select name="estado_civil">
+                                <option value="solteiro" {% if estado_civil == 'solteiro' %}selected{% endif %}>Solteiro</option>
+                                <option value="casado" {% if estado_civil == 'casado' %}selected{% endif %}>Casado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {# Campos para ENI (escondidos por defeito) #}
+                    <div id="campos-eni" class="sub-grid" style="display: none;">
+                        <div class="input-group">
+                            <label>Coeficiente de Atividade</label>
+                            <input type="number" name="coeficiente_atividade" step="0.01" min="0" max="1" 
+                                   value="{{ coeficiente_atividade or 0.75 }}" placeholder="Ex: 0.75">
+                        </div>
+                        <div class="input-group">
+                            <label>Retenção IRS (%)</label>
+                            <input type="number" name="retencao_irs" step="0.01" min="0" max="1" 
+                                   value="{{ retencao_irs or 0.15 }}" placeholder="Ex: 0.15">
+                        </div>
+                        <div class="input-group full-width">
+                            <label>Isento de Segurança Social?</label>
+                            <select name="isento_ss">
+                                <option value="nao" {% if isento_ss == 'nao' %}selected{% endif %}>Não</option>
+                                <option value="sim" {% if isento_ss == 'sim' %}selected{% endif %}>Sim</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-main">Calcular Salário</button>
+            </form>
+
+            {% if resultado %}
+            <div class="resultados visible" style="margin-top: 25px;">
+                <div class="grid-res">
+                    <div class="res-card">
+                        <small>Salário Líquido</small>
+                        <div class="big-val">€{{ "%.2f"|format(resultado.liquido) }}</div>
+                    </div>
+                    <div class="res-card">
+                        <small>Regime</small>
+                        <div class="big-val" style="color: #3b82f6; font-size: 1.2rem;">{{ resultado.regime }}</div>
+                    </div>
+                </div>
+
+                <div class="info-extra">
+                    <p><strong>Salário Bruto:</strong> €{{ "%.2f"|format(resultado.bruto) }}</p>
+                    <p><strong>Segurança Social:</strong> €{{ "%.2f"|format(resultado.seguranca_social) }}</p>
+                    <p><strong>IRS:</strong> €{{ "%.2f"|format(resultado.irs) }}</p>
+                    {% if resultado.subsidio_alimentacao %}
+                    <p><strong>Subsídio Alimentação:</strong> €{{ "%.2f"|format(resultado.subsidio_alimentacao) }}</p>
+                    {% endif %}
+                    {% if resultado.taxa_efetiva_irs %}
+                    <p><strong>Taxa Efetiva IRS:</strong> {{ resultado.taxa_efetiva_irs }}%</p>
+                    {% endif %}
+                    {% if resultado.coeficiente %}
+                    <p><strong>Coeficiente:</strong> {{ resultado.coeficiente }}</p>
+                    {% endif %}
+                    {% if resultado.rendimento_tributavel %}
+                    <p><strong>Rendimento Tributável:</strong> €{{ "%.2f"|format(resultado.rendimento_tributavel) }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+
+    <script>
+        function toggleRegime() {
+            var regime = document.getElementById('regime-select').value;
+            var outrem = document.getElementById('campos-outrem');
+            var eni = document.getElementById('campos-eni');
+            
+            if (regime === 'outrem') {
+                outrem.style.display = 'grid';
+                eni.style.display = 'none';
+            } else {
+                outrem.style.display = 'none';
+                eni.style.display = 'grid';
+            }
+        }
+        
+        // Executar no carregamento da página
+        window.onload = toggleRegime;
+    </script>
+{% endblock %}
