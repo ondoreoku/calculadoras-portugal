@@ -14,16 +14,31 @@ FEEDS_RSS = [
 ]
 
 PALAVRAS_CHAVE = [
-    "salario", "salario", "irs", "imposto", "rendimento",
-    "subsidio", "subsidio", "desemprego", "reforma", "pensao", "pensao",
-    "seguranca social", "seguranca social", "trabalho", "emprego",
-    "euribor", "credito", "credito", "habitacao", "habitacao",
-    "hipoteca", "banco", "spread", "juro", "taxa", "financiamento",
-    "inflacao", "inflacao", "economia", "financas", "financas",
-    "pib", "deficit", "deficit", "orcamento", "orcamento",
-    "ministerio", "ministerio", "governo", "bruxelas", "europa",
-    "ias", "smn", "salario minimo", "salario minimo",
-    "preco", "preco", "custo", "aumento", "descida",
+    # Salários e IRS
+    "salario liquido", "salario bruto", "salario minimo", 
+    "irs ", "retenção irs", "tabelas irs", "escalões irs",
+    "imposto rendimento", "coeficiente atividade",
+    
+    # Subsídios e Segurança Social
+    "subsidio desemprego", "subsidio ferias", "subsidio natal",
+    "segurança social", "descontos ss", "taxa ss",
+    "reforma ", "pensão ", "idade reforma", "descontos reforma",
+    
+    # Trabalho e Emprego
+    "rescisão contrato", "indemnização trabalho", 
+    "lay-off", "horas formação", "férias vencidas",
+    "contrato trabalho", "despedimento",
+    
+    # Crédito Habitação
+    "credito habitação", "crédito habitação",
+    "euribor ", "spread bancario", "taxa esforço",
+    "prestação casa", "simulador crédito", "hipoteca ",
+    "entrada imovel", "financiamento habitação",
+    
+    # Indicadores Específicos
+    "ias 2026", "indexante apoios",
+    "smn ", "salario minimo nacional",
+    "inflacao portugal", "taxa inflacao",
 ]
 
 MAX_NOTICIAS_POR_FEED = 15
