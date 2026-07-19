@@ -31,9 +31,17 @@ COMO INICIAR:
 ================================================================================
 """
 
-from flask import Flask, render_template, request, redirect, url_for
+"""
+================================================================================
+APP.PY — Aplicação Flask Principal (Versão Híbrida: HTML + API)
+================================================================================
+"""
+
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask_cors import CORS
 import sqlite3
 import json
+import os
 from datetime import datetime
 
 # Importa as funções dos módulos de calculadoras
@@ -45,38 +53,31 @@ from utils.rescisao import calcular_rescisao
 
 DATABASE = "database.db"
 
-
 # =============================================================================
-# INICIALIZACAO AUTOMATICA DA BASE DE DADOS
+# INICIALIZAÇÃO AUTOMÁTICA DA BASE DE DADOS
 # =============================================================================
-# No Render (producao), o database.db nao sobe pelo Git (esta no .gitignore).
-# Esta funcao cria a base de dados automaticamente se nao existir.
-# =============================================================================
-import os
-
 def init_db_if_missing():
-    """Cria a base de dados se nao existir (necessario no Render)."""
+    """Cria a base de dados se não existir (necessário no Render)."""
     if not os.path.exists(DATABASE):
-        print("[INFO] Base de dados nao encontrada. A criar...")
+        print("[INFO] Base de dados não encontrada. A criar...")
         import initdb
         initdb.create_tables()
         initdb.seed_taxas()
-        # Busca noticias automaticamente no primeiro arranque
-        # Assim o utilizador ve noticias reais desde o primeiro acesso
-        print("[INFO] A buscar noticias do RSS...")
-        from utils.noticias import atualizar_noticias, limpar_cache_antigo
+        print("[INFO] A buscar notícias do RSS...")
         try:
             inseridas = atualizar_noticias()
             limpar_cache_antigo()
-            print(f"[OK] {inseridas} noticias inseridas automaticamente")
+            print(f"[OK] {inseridas} notícias inseridas automaticamente")
         except Exception as e:
-            print(f"[AVISO] Nao foi possivel atualizar noticias: {e}")
+            print(f"[AVISO] Não foi possível atualizar notícias: {e}")
         print("[OK] Base de dados criada com sucesso")
 
-# Chama no arranque da aplicacao
 init_db_if_missing()
 
 app = Flask(__name__)
+
+# PERMITE QUE SITES EXTERNOS (VERCEL) ACEDAM ÀS ROTAS /api/
+CORS(app, resources={r"/api/*": {"origins": "*"}}) # Em produção, podes restringir aos teus domínios Vercel
 
 
 def get_db():
@@ -88,32 +89,33 @@ def get_db():
 
 def guardar_historico(tipo, inputs_dict, resultado_dict):
     """Guarda um cálculo no histórico da base de dados."""
-    con = get_db()
-    cur = con.cursor()
-    cur.execute("""
-        INSERT INTO historico_calculos (tipo, input_json, resultado_json)
-        VALUES (?, ?, ?)
-    """, (
-        tipo,
-        json.dumps(inputs_dict, ensure_ascii=False),
-        json.dumps(resultado_dict, ensure_ascii=False)
-    ))
-    con.commit()
-    con.close()
+    try:
+        con = get_db()
+        cur = con.cursor()
+        cur.execute("""
+            INSERT INTO historico_calculos (tipo, input_json, resultado_json)
+            VALUES (?, ?, ?)
+        """, (
+            tipo,
+            json.dumps(inputs_dict, ensure_ascii=False),
+            json.dumps(resultado_dict, ensure_ascii=False)
+        ))
+        con.commit()
+        con.close()
+    except Exception as e:
+        print(f"[ERRO] Ao guardar histórico: {e}")
 
 
 # =============================================================================
-# ROTA 1: HOME PAGE
+# ROTAS HTML (PORTAL CENTRAL - Mantidas exatamente como tinhas)
 # =============================================================================
+
 @app.route("/")
 def home():
     noticias = get_noticias(limite=9)
     return render_template("home.html", noticias=noticias)
 
 
-# =============================================================================
-# ROTA 2: ATUALIZAR NOTÍCIAS
-# =============================================================================
 @app.route("/atualizar_noticias")
 def atualizar_noticias_rota():
     try:
@@ -125,9 +127,6 @@ def atualizar_noticias_rota():
     return redirect(url_for("home"))
 
 
-# =============================================================================
-# ROTA 3: HISTÓRICO
-# =============================================================================
 @app.route("/historico")
 def historico():
     con = get_db()
@@ -162,11 +161,8 @@ def historico():
     return render_template("historico.html", registos=registos)
 
 
-# =============================================================================
-# ROTA 4: SALÁRIO LÍQUIDO
-# =============================================================================
 @app.route("/salario", methods=["GET", "POST"])
-def salario():
+def salario_page():
     resultado = None
     regime = "outrem"
     bruto = 1500
@@ -183,54 +179,20 @@ def salario():
         if regime == "outrem":
             subsidio_alimentacao = float(request.form.get("subsidio_alimentacao", 0))
             estado_civil = request.form.get("estado_civil", "solteiro")
-            resultado = calcular_salario(
-                bruto=bruto,
-                regime="outrem",
-                subsidio_alimentacao=subsidio_alimentacao,
-                estado_civil=estado_civil
-            )
+            resultado = calcular_salario(bruto=bruto, regime="outrem", subsidio_alimentacao=subsidio_alimentacao, estado_civil=estado_civil)
         else:
             coeficiente_atividade = float(request.form.get("coeficiente_atividade", 0.75))
             retencao_irs = float(request.form.get("retencao_irs", 0.15))
             isento_ss = request.form.get("isento_ss", "nao")
-            resultado = calcular_salario(
-                bruto=bruto,
-                regime="eni",
-                coeficiente_atividade=coeficiente_atividade,
-                retencao_irs=retencao_irs,
-                isento_ss=isento_ss
-            )
+            resultado = calcular_salario(bruto=bruto, regime="eni", coeficiente_atividade=coeficiente_atividade, retencao_irs=retencao_irs, isento_ss=isento_ss)
 
-        guardar_historico(
-            tipo="salario",
-            inputs_dict={
-                "bruto": bruto,
-                "regime": regime,
-                "subsidio_alimentacao": subsidio_alimentacao if regime == "outrem" else 0,
-                "estado_civil": estado_civil if regime == "outrem" else "",
-                "coeficiente_atividade": coeficiente_atividade if regime == "eni" else 0,
-                "retencao_irs": retencao_irs if regime == "eni" else 0,
-                "isento_ss": isento_ss if regime == "eni" else "",
-            },
-            resultado_dict=resultado
-        )
+        guardar_historico(tipo="salario", inputs_dict=request.form.to_dict(), resultado_dict=resultado)
 
-    return render_template("salario.html",
-                          resultado=resultado,
-                          regime=regime,
-                          bruto=bruto,
-                          subsidio_alimentacao=subsidio_alimentacao,
-                          estado_civil=estado_civil,
-                          coeficiente_atividade=coeficiente_atividade,
-                          retencao_irs=retencao_irs,
-                          isento_ss=isento_ss)
+    return render_template("salario.html", resultado=resultado, regime=regime, bruto=bruto, subsidio_alimentacao=subsidio_alimentacao, estado_civil=estado_civil, coeficiente_atividade=coeficiente_atividade, retencao_irs=retencao_irs, isento_ss=isento_ss)
 
 
-# =============================================================================
-# ROTA 5: CRÉDITO HABITAÇÃO
-# =============================================================================
 @app.route("/credito", methods=["GET", "POST"])
-def credito():
+def credito_page():
     resultado = None
     tabela = None
 
@@ -244,26 +206,13 @@ def credito():
         resultado = calcular_credito(valor_imovel, entrada, prazo_anos, spread, euribor)
         tabela = calcular_tabela_amortizacao(valor_imovel, entrada, prazo_anos, spread, euribor, limite=12)
 
-        guardar_historico(
-            tipo="credito",
-            inputs_dict={
-                "valor_imovel": valor_imovel,
-                "entrada": entrada,
-                "prazo_anos": prazo_anos,
-                "spread": spread,
-                "euribor": euribor
-            },
-            resultado_dict=resultado
-        )
+        guardar_historico(tipo="credito", inputs_dict=request.form.to_dict(), resultado_dict=resultado)
 
     return render_template("credito.html", resultado=resultado, tabela=tabela)
 
 
-# =============================================================================
-# ROTA 6: RESCISÃO
-# =============================================================================
 @app.route("/rescisao", methods=["GET", "POST"])
-def rescisao():
+def rescisao_page():
     resultado = None
     vencimento_base = 1200
     subsidio_alimentacao = 6.0
@@ -284,45 +233,15 @@ def rescisao():
         ferias_vencidas = int(request.form.get("ferias_vencidas", 0))
         horas_formacao = int(request.form.get("horas_formacao", 0))
 
-        resultado = calcular_rescisao(
-            vencimento_base=vencimento_base,
-            subsidio_alimentacao=subsidio_alimentacao,
-            data_inicio=data_inicio,
-            data_fim=data_fim,
-            motivo=motivo,
-            meses_layoff=meses_layoff,
-            ferias_vencidas=ferias_vencidas,
-            horas_formacao=horas_formacao
-        )
+        resultado = calcular_rescisao(vencimento_base=vencimento_base, subsidio_alimentacao=subsidio_alimentacao, data_inicio=data_inicio, data_fim=data_fim, motivo=motivo, meses_layoff=meses_layoff, ferias_vencidas=ferias_vencidas, horas_formacao=horas_formacao)
 
-        guardar_historico(
-            tipo="rescisao",
-            inputs_dict={
-                "vencimento_base": vencimento_base,
-                "data_inicio": data_inicio,
-                "data_fim": data_fim,
-                "motivo": motivo
-            },
-            resultado_dict=resultado
-        )
+        guardar_historico(tipo="rescisao", inputs_dict=request.form.to_dict(), resultado_dict=resultado)
 
-    return render_template("rescisao.html",
-                          resultado=resultado,
-                          vencimento_base=vencimento_base,
-                          subsidio_alimentacao=subsidio_alimentacao,
-                          data_inicio=data_inicio,
-                          data_fim=data_fim,
-                          motivo=motivo,
-                          meses_layoff=meses_layoff,
-                          ferias_vencidas=ferias_vencidas,
-                          horas_formacao=horas_formacao)
+    return render_template("rescisao.html", resultado=resultado, vencimento_base=vencimento_base, subsidio_alimentacao=subsidio_alimentacao, data_inicio=data_inicio, data_fim=data_fim, motivo=motivo, meses_layoff=meses_layoff, ferias_vencidas=ferias_vencidas, horas_formacao=horas_formacao)
 
 
-# =============================================================================
-# ROTA 7: SUBSÍDIO DESEMPREGO (já funcional)
-# =============================================================================
 @app.route("/subsidio", methods=["GET", "POST"])
-def subsidio():
+def subsidio_page():
     resultado = None
 
     if request.method == "POST":
@@ -332,17 +251,94 @@ def subsidio():
 
         resultado = calcular_subsidio(media_salarial, idade, meses_desconto)
 
-        guardar_historico(
-            tipo="subsidio",
-            inputs_dict={
-                "media_salarial": media_salarial,
-                "idade": idade,
-                "meses_desconto": meses_desconto
-            },
-            resultado_dict=resultado
-        )
+        guardar_historico(tipo="subsidio", inputs_dict=request.form.to_dict(), resultado_dict=resultado)
 
     return render_template("subsidio.html", resultado=resultado)
+
+
+# =============================================================================
+# ROTAS API (NOVAS: Single Source of Truth para os sites estáticos)
+# =============================================================================
+
+@app.route("/api/salario", methods=["POST"])
+def api_salario():
+    try:
+        dados = request.get_json()
+        if not dados or "bruto" not in dados:
+            return jsonify({"erro": "Dados inválidos. 'bruto' é obrigatório."}), 400
+        
+        # Reutiliza a tua função Python existente!
+        if dados.get("regime") == "eni":
+            resultado = calcular_salario(bruto=dados["bruto"], regime="eni", coeficiente_atividade=dados.get("coeficiente_atividade", 0.75), retencao_irs=dados.get("retencao_irs", 0.15), isento_ss=dados.get("isento_ss", "nao"))
+        else:
+            resultado = calcular_salario(bruto=dados["bruto"], regime="outrem", subsidio_alimentacao=dados.get("subsidio_alimentacao", 6.0), estado_civil=dados.get("estado_civil", "solteiro"))
+        
+        # Opcional: Guardar também no histórico se vier da API
+        guardar_historico(tipo="salario", inputs_dict=dados, resultado_dict=resultado)
+        
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+
+@app.route("/api/rescisao", methods=["POST"])
+def api_rescisao():
+    try:
+        dados = request.get_json()
+        if not dados or "vencimento_base" not in dados:
+            return jsonify({"erro": "Dados inválidos."}), 400
+        
+        resultado = calcular_rescisao(
+            vencimento_base=dados["vencimento_base"],
+            subsidio_alimentacao=dados.get("subsidio_alimentacao", 6.0),
+            data_inicio=dados.get("data_inicio", "2020-01-01"),
+            data_fim=dados.get("data_fim", "2026-01-01"),
+            motivo=dados.get("motivo", "caducidade_termo"),
+            meses_layoff=int(dados.get("meses_layoff", 0)),
+            ferias_vencidas=int(dados.get("ferias_vencidas", 0)),
+            horas_formacao=int(dados.get("horas_formacao", 0))
+        )
+        
+        guardar_historico(tipo="rescisao", inputs_dict=dados, resultado_dict=resultado)
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+
+@app.route("/api/credito", methods=["POST"])
+def api_credito():
+    try:
+        dados = request.get_json()
+        if not dados or "valor_imovel" not in dados:
+            return jsonify({"erro": "Dados inválidos."}), 400
+        
+        resultado = calcular_credito(dados["valor_imovel"], dados.get("entrada", 0), dados.get("prazo_anos", 30), dados.get("spread", 1.0), dados.get("euribor", 3.5))
+        
+        guardar_historico(tipo="credito", inputs_dict=dados, resultado_dict=resultado)
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+
+@app.route("/api/subsidio", methods=["POST"])
+def api_subsidio():
+    try:
+        dados = request.get_json()
+        if not dados or "media_salarial" not in dados:
+            return jsonify({"erro": "Dados inválidos."}), 400
+        
+        resultado = calcular_subsidio(dados["media_salarial"], int(dados.get("idade", 30)), int(dados.get("meses_desconto", 12)))
+        
+        guardar_historico(tipo="subsidio", inputs_dict=dados, resultado_dict=resultado)
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+
+@app.route("/api/health", methods=["GET"])
+def health_check():
+    """Endpoint simples para verificar se a API está no ar."""
+    return jsonify({"status": "ok", "message": "API Calculadoras Portugal 2026 funcionando!"})
 
 
 # =============================================================================
@@ -350,10 +346,8 @@ def subsidio():
 # =============================================================================
 if __name__ == "__main__":
     print("=" * 60)
-    print("  Calculadoras Portugal 2026")
+    print("  Calculadoras Portugal 2026 (Modo Híbrido: HTML + API)")
     print("  Servidor Flask a iniciar...")
     print("=" * 60)
-    # Usa PORT do ambiente (necessario para Render/Railway)
-    # Se nao existir, usa 5000 (localhost)
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
