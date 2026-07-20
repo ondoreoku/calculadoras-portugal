@@ -20,8 +20,16 @@ ROTAS:
     GET  /atualizar_noticias  → Força atualização do feed RSS
     GET  /historico           → Histórico de cálculos
 
+    --- ROTAS DA API (para frontends Vercel) ---
+    POST /api/salario         → API para Salário Líquido
+    POST /api/credito         → API para Crédito Habitação
+    POST /api/rescisao        → API para Rescisão
+    POST /api/subsidio        → API para Subsídio Desemprego
+    GET  /api/health          → Health check
+
 DEPENDÊNCIAS:
     — Flask: pip install flask
+    — flask-cors: pip install flask-cors
     — feedparser: pip install feedparser (para notícias RSS)
 
 COMO INICIAR:
@@ -31,12 +39,16 @@ COMO INICIAR:
 ================================================================================
 """
 
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_cors import CORS
 import sqlite3
 import json
+import os
 from datetime import datetime
 
+# =============================================================================
+# INICIALIZAÇÃO DA APLICAÇÃO
+# =============================================================================
 app = Flask(__name__)
 
 # =============================================================================
@@ -53,7 +65,9 @@ CORS(app, resources={
     }
 })
 
-# Importa as funções dos módulos de calculadoras
+# =============================================================================
+# IMPORTS DOS MÓDULOS DE CÁLCULO
+# =============================================================================
 from utils.noticias import get_noticias, atualizar_noticias, limpar_cache_antigo
 from utils.subsidio import calcular_subsidio
 from utils.credito import calcular_credito, calcular_tabela_amortizacao
@@ -62,46 +76,35 @@ from utils.rescisao import calcular_rescisao
 
 DATABASE = "database.db"
 
-
 # =============================================================================
-# INICIALIZACAO AUTOMATICA DA BASE DE DADOS
+# INICIALIZAÇÃO AUTOMÁTICA DA BASE DE DADOS
 # =============================================================================
-# No Render (producao), o database.db nao sobe pelo Git (esta no .gitignore).
-# Esta funcao cria a base de dados automaticamente se nao existir.
-# =============================================================================
-import os
-
 def init_db_if_missing():
-    """Cria a base de dados se nao existir (necessario no Render)."""
+    """Cria a base de dados se não existir (necessário no Render)."""
     if not os.path.exists(DATABASE):
-        print("[INFO] Base de dados nao encontrada. A criar...")
+        print("[INFO] Base de dados não encontrada. A criar...")
         import initdb
         initdb.create_tables()
         initdb.seed_taxas()
-        # Busca noticias automaticamente no primeiro arranque
-        # Assim o utilizador ve noticias reais desde o primeiro acesso
-        print("[INFO] A buscar noticias do RSS...")
-        from utils.noticias import atualizar_noticias, limpar_cache_antigo
+        print("[INFO] A buscar notícias do RSS...")
         try:
             inseridas = atualizar_noticias()
             limpar_cache_antigo()
-            print(f"[OK] {inseridas} noticias inseridas automaticamente")
+            print(f"[OK] {inseridas} notícias inseridas automaticamente")
         except Exception as e:
-            print(f"[AVISO] Nao foi possivel atualizar noticias: {e}")
+            print(f"[AVISO] Não foi possível atualizar notícias: {e}")
         print("[OK] Base de dados criada com sucesso")
 
-# Chama no arranque da aplicacao
 init_db_if_missing()
 
-app = Flask(__name__)
-
-
+# =============================================================================
+# FUNÇÕES AUXILIARES
+# =============================================================================
 def get_db():
     """Abre conexão com SQLite."""
     con = sqlite3.connect(DATABASE)
     con.row_factory = sqlite3.Row
     return con
-
 
 def guardar_historico(tipo, inputs_dict, resultado_dict):
     """Guarda um cálculo no histórico da base de dados."""
@@ -118,19 +121,15 @@ def guardar_historico(tipo, inputs_dict, resultado_dict):
     con.commit()
     con.close()
 
+# =============================================================================
+# ROTAS HTML (PÁGINAS DO SITE)
+# =============================================================================
 
-# =============================================================================
-# ROTA 1: HOME PAGE
-# =============================================================================
 @app.route("/")
 def home():
     noticias = get_noticias(limite=9)
     return render_template("home.html", noticias=noticias)
 
-
-# =============================================================================
-# ROTA 2: ATUALIZAR NOTÍCIAS
-# =============================================================================
 @app.route("/atualizar_noticias")
 def atualizar_noticias_rota():
     try:
@@ -141,10 +140,6 @@ def atualizar_noticias_rota():
         print(f"[ERRO] Falha na atualização: {e}")
     return redirect(url_for("home"))
 
-
-# =============================================================================
-# ROTA 3: HISTÓRICO
-# =============================================================================
 @app.route("/historico")
 def historico():
     con = get_db()
@@ -175,13 +170,8 @@ def historico():
             "resultado": resultado,
             "data_hora": row["data_hora"],
         })
-
     return render_template("historico.html", registos=registos)
 
-
-# =============================================================================
-# ROTA 4: SALÁRIO LÍQUIDO
-# =============================================================================
 @app.route("/salario", methods=["GET", "POST"])
 def salario():
     resultado = None
@@ -242,10 +232,6 @@ def salario():
                           retencao_irs=retencao_irs,
                           isento_ss=isento_ss)
 
-
-# =============================================================================
-# ROTA 5: CRÉDITO HABITAÇÃO
-# =============================================================================
 @app.route("/credito", methods=["GET", "POST"])
 def credito():
     resultado = None
@@ -275,10 +261,6 @@ def credito():
 
     return render_template("credito.html", resultado=resultado, tabela=tabela)
 
-
-# =============================================================================
-# ROTA 6: RESCISÃO
-# =============================================================================
 @app.route("/rescisao", methods=["GET", "POST"])
 def rescisao():
     resultado = None
@@ -334,10 +316,6 @@ def rescisao():
                           ferias_vencidas=ferias_vencidas,
                           horas_formacao=horas_formacao)
 
-
-# =============================================================================
-# ROTA 7: SUBSÍDIO DESEMPREGO (já funcional)
-# =============================================================================
 @app.route("/subsidio", methods=["GET", "POST"])
 def subsidio():
     resultado = None
@@ -361,6 +339,94 @@ def subsidio():
 
     return render_template("subsidio.html", resultado=resultado)
 
+# =============================================================================
+# ROTAS DA API (para os frontends da Vercel)
+# =============================================================================
+
+@app.route("/api/salario", methods=["POST"])
+def api_salario():
+    try:
+        dados = request.get_json()
+        if not dados or "bruto" not in dados:
+            return jsonify({"erro": "Dados inválidos."}), 400
+        if dados.get("regime") == "eni":
+            resultado = calcular_salario(
+                bruto=dados["bruto"],
+                regime="eni",
+                coeficiente_atividade=dados.get("coeficiente_atividade", 0.75),
+                retencao_irs=dados.get("retencao_irs", 0.15),
+                isento_ss=dados.get("isento_ss", "nao")
+            )
+        else:
+            resultado = calcular_salario(
+                bruto=dados["bruto"],
+                regime="outrem",
+                subsidio_alimentacao=dados.get("subsidio_alimentacao", 6.0),
+                estado_civil=dados.get("estado_civil", "solteiro")
+            )
+        guardar_historico(tipo="salario", inputs_dict=dados, resultado_dict=resultado)
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+@app.route("/api/credito", methods=["POST"])
+def api_credito():
+    try:
+        dados = request.get_json()
+        if not dados or "valor_imovel" not in dados:
+            return jsonify({"erro": "Dados inválidos."}), 400
+        resultado = calcular_credito(
+            dados["valor_imovel"],
+            dados.get("entrada", 0),
+            dados.get("prazo_anos", 30),
+            dados.get("spread", 1.0),
+            dados.get("euribor", 3.5)
+        )
+        guardar_historico(tipo="credito", inputs_dict=dados, resultado_dict=resultado)
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+@app.route("/api/rescisao", methods=["POST"])
+def api_rescisao():
+    try:
+        dados = request.get_json()
+        if not dados or "vencimento_base" not in dados:
+            return jsonify({"erro": "Dados inválidos."}), 400
+        resultado = calcular_rescisao(
+            vencimento_base=dados["vencimento_base"],
+            subsidio_alimentacao=dados.get("subsidio_alimentacao", 6.0),
+            data_inicio=dados.get("data_inicio", "2020-01-01"),
+            data_fim=dados.get("data_fim", "2026-01-01"),
+            motivo=dados.get("motivo", "caducidade_termo"),
+            meses_layoff=int(dados.get("meses_layoff", 0)),
+            ferias_vencidas=int(dados.get("ferias_vencidas", 0)),
+            horas_formacao=int(dados.get("horas_formacao", 0))
+        )
+        guardar_historico(tipo="rescisao", inputs_dict=dados, resultado_dict=resultado)
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+@app.route("/api/subsidio", methods=["POST"])
+def api_subsidio():
+    try:
+        dados = request.get_json()
+        if not dados or "media_salarial" not in dados:
+            return jsonify({"erro": "Dados inválidos."}), 400
+        resultado = calcular_subsidio(
+            dados["media_salarial"],
+            int(dados.get("idade", 30)),
+            int(dados.get("meses_desconto", 12))
+        )
+        guardar_historico(tipo="subsidio", inputs_dict=dados, resultado_dict=resultado)
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+@app.route("/api/health", methods=["GET"])
+def health_check():
+    return jsonify({"status": "ok", "message": "API Calculadoras Portugal 2026"})
 
 # =============================================================================
 # INICIALIZAÇÃO DO SERVIDOR
@@ -370,7 +436,5 @@ if __name__ == "__main__":
     print("  Calculadoras Portugal 2026")
     print("  Servidor Flask a iniciar...")
     print("=" * 60)
-    # Usa PORT do ambiente (necessario para Render/Railway)
-    # Se nao existir, usa 5000 (localhost)
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
