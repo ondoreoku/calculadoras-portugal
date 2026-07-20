@@ -32,9 +32,26 @@ COMO INICIAR:
 """
 
 from flask import Flask, render_template, request, redirect, url_for
+from flask_cors import CORS
 import sqlite3
 import json
 from datetime import datetime
+
+app = Flask(__name__)
+
+# =============================================================================
+# CONFIGURAÇÃO CORS (apenas para os endpoints da API)
+# =============================================================================
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "https://salarioliquido.vercel.app",
+            "https://simulador-credito-habitacao-2026.vercel.app",
+            "https://calculadora-rescisao-contrato.vercel.app",
+            "https://simulador-subsidio-desemprego.vercel.app"
+        ]
+    }
+})
 
 # Importa as funções dos módulos de calculadoras
 from utils.noticias import get_noticias, atualizar_noticias, limpar_cache_antigo
