@@ -13,10 +13,13 @@ logger = logging.getLogger(__name__)
 failed_attempts = defaultdict(list)
 blocked_users = {}  # user_id → timestamp
 blocked_reasons = {}  # user_id → motivo
+request_counts = defaultdict(list)  # user_id → lista de timestamps para rate limiting
 
-# Configurações (AUMENTADAS)
+# Configurações
 BLOCK_TIME = 7200  # 2 horas (para erros normais)
 ATTACK_BLOCK_TIME = 86400  # 24 horas (para ataques)
+RATE_LIMIT = 10  # Máximo de pedidos por minuto
+RATE_WINDOW = 60  # Janela de 60 segundos
 
 # Padrões de ATAQUE
 ATTACK_PATTERNS = [
@@ -59,6 +62,19 @@ def block_user(user_id, reason, duration=BLOCK_TIME):
     blocked_reasons[user_id] = reason
     logger.info(f"[BLOQUEIO] Utilizador {user_id[:8]} bloqueado: {reason}")
 
+def check_rate_limit(user_id):
+    """Verifica rate limiting para um utilizador."""
+    now = time.time()
+    # Limpar pedidos antigos
+    request_counts[user_id] = [t for t in request_counts[user_id] if now - t < RATE_WINDOW]
+    
+    if len(request_counts[user_id]) >= RATE_LIMIT:
+        block_user(user_id, f"Demasiados pedidos ({len(request_counts[user_id])} em 60s)", 300)  # Bloqueia 5 min
+        return True
+    
+    request_counts[user_id].append(now)
+    return False
+
 def check_ip_block():
     def decorator(f):
         from functools import wraps
@@ -66,6 +82,15 @@ def check_ip_block():
         def decorated_function(*args, **kwargs):
             if request.method == 'POST':
                 user_id = get_user_id()
+                
+                # Rate Limiting (NOVO!)
+                if check_rate_limit(user_id):
+                    response = make_response(render_template("bloqueado.html", 
+                                        user_id=user_id[:8],
+                                        motivo="Demasiados pedidos (rate limiting)", 
+                                        tempo="5 minutos"), 429)
+                    response.set_cookie('user_id', user_id, max_age=365*24*60*60, httponly=True, secure=True, samesite='Lax')
+                    return response
                 
                 # Verificar bloqueio por utilizador (cookie)
                 is_blocked_flag, reason = is_blocked(user_id)
