@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 failed_attempts = defaultdict(list)
 blocked_users = {}  # user_id → timestamp
 blocked_reasons = {}  # user_id → motivo
-request_counts = defaultdict(list)  # user_id → lista de timestamps para rate limiting
+ip_request_counts = defaultdict(list)  # ip → lista de timestamps para rate limiting
 
 # Configurações
 BLOCK_TIME = 7200  # 2 horas (para erros normais)
@@ -35,6 +35,12 @@ def get_user_id():
         user_id = secrets.token_hex(16)
     return user_id
 
+def get_client_ip():
+    """Obtém o IP real do cliente (mesmo com proxy)."""
+    if request.headers.get('X-Forwarded-For'):
+        return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+    return request.remote_addr or '127.0.0.1'
+
 def is_attack_payload(data):
     if not data:
         return False
@@ -44,7 +50,13 @@ def is_attack_payload(data):
             return True
     return False
 
-def is_blocked(user_id):
+def is_blocked(user_id, ip):
+    # Verificar bloqueio por IP (para rate limiting)
+    if ip in ip_request_counts:
+        # Se o IP está bloqueado por rate limiting, verificar tempo
+        pass
+    
+    # Verificar bloqueio por utilizador (cookie)
     if user_id in blocked_users:
         if time.time() < blocked_users[user_id]:
             return True, blocked_reasons.get(user_id, "Atividade suspeita")
@@ -62,18 +74,18 @@ def block_user(user_id, reason, duration=BLOCK_TIME):
     blocked_reasons[user_id] = reason
     logger.info(f"[BLOQUEIO] Utilizador {user_id[:8]} bloqueado: {reason}")
 
-def check_rate_limit(user_id):
-    """Verifica rate limiting para um utilizador."""
+def check_rate_limit(ip):
+    """Verifica rate limiting por IP."""
     now = time.time()
     # Limpar pedidos antigos
-    request_counts[user_id] = [t for t in request_counts[user_id] if now - t < RATE_WINDOW]
+    ip_request_counts[ip] = [t for t in ip_request_counts[ip] if now - t < RATE_WINDOW]
     
-    if len(request_counts[user_id]) >= RATE_LIMIT:
-        block_user(user_id, f"Demasiados pedidos ({len(request_counts[user_id])} em 60s)", 300)  # Bloqueia 5 min
-        return True
+    if len(ip_request_counts[ip]) >= RATE_LIMIT:
+        logger.warning(f"[RATE LIMIT] IP {ip} excedeu o limite de {RATE_LIMIT} pedidos/minuto")
+        return True, f"Demasiados pedidos ({len(ip_request_counts[ip])} em 60s)"
     
-    request_counts[user_id].append(now)
-    return False
+    ip_request_counts[ip].append(now)
+    return False, ""
 
 def check_ip_block():
     def decorator(f):
@@ -82,18 +94,19 @@ def check_ip_block():
         def decorated_function(*args, **kwargs):
             if request.method == 'POST':
                 user_id = get_user_id()
+                ip = get_client_ip()
                 
-                # Rate Limiting (NOVO!)
-                if check_rate_limit(user_id):
+                # Rate Limiting por IP (NOVO!)
+                rate_limited, rate_reason = check_rate_limit(ip)
+                if rate_limited:
                     response = make_response(render_template("bloqueado.html", 
-                                        user_id=user_id[:8],
-                                        motivo="Demasiados pedidos (rate limiting)", 
-                                        tempo="5 minutos"), 429)
-                    response.set_cookie('user_id', user_id, max_age=365*24*60*60, httponly=True, secure=True, samesite='Lax')
+                                        user_id="IP",
+                                        motivo=rate_reason, 
+                                        tempo="1 minuto"), 429)
                     return response
                 
                 # Verificar bloqueio por utilizador (cookie)
-                is_blocked_flag, reason = is_blocked(user_id)
+                is_blocked_flag, reason = is_blocked(user_id, ip)
                 if is_blocked_flag:
                     response = make_response(render_template("bloqueado.html", 
                                         user_id=user_id[:8],
