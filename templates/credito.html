@@ -10,6 +10,11 @@
 
         <section class="form-card">
             <form method="POST" action="/credito">
+            {% if erro %}
+            <div style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                ⚠️ {{ erro }}
+            </div>
+            {% endif %}
                 <div class="grid">
                     <div class="input-group">
                         <label>Valor do Imóvel (€)</label>

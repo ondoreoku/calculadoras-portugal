@@ -182,6 +182,14 @@ def historico():
     return render_template("historico.html", registos=registos)
 
 @app.route("/salario", methods=["GET", "POST"])
+def validar_numero(valor, nome="valor", min_val=0, max_val=1000000):
+    try:
+        num = float(valor)
+        if num < min_val or num > max_val:
+            return None, f"{nome} deve estar entre {min_val} e {max_val}"
+        return num, None
+    except ValueError:
+        return None, f"{nome} inválido"
 def salario():
     resultado = None
     regime = "outrem"
@@ -194,10 +202,12 @@ def salario():
 
     if request.method == "POST":
         regime = request.form.get("regime", "outrem")
-        bruto = float(request.form.get("bruto", 0))
+        bruto, erro = validar_numero(request.form.get("bruto", 0), "Salário")
+    if erro: return render_template("salario.html", erro=erro)
 
         if regime == "outrem":
-            subsidio_alimentacao = float(request.form.get("subsidio_alimentacao", 0))
+            subsidio_alimentacao, erro = validar_numero(request.form.get("subsidio_alimentacao", 0), "Subsídio alimentação")
+    if erro: return render_template("rescisao.html", erro=erro)
             estado_civil = request.form.get("estado_civil", "solteiro")
             resultado = calcular_salario(
                 bruto=bruto,
@@ -247,11 +257,15 @@ def credito():
     tabela = None
 
     if request.method == "POST":
-        valor_imovel = float(request.form.get("valor_imovel", 0))
-        entrada = float(request.form.get("entrada", 0))
+        valor_imovel, erro = validar_numero(request.form.get("valor_imovel", 0), "Valor do imóvel")
+    if erro: return render_template("credito.html", erro=erro)
+        entrada, erro = validar_numero(request.form.get("entrada", 0), "Entrada")
+    if erro: return render_template("credito.html", erro=erro)
         prazo_anos = int(request.form.get("prazo_anos", 0))
-        spread = float(request.form.get("spread", 0))
-        euribor = float(request.form.get("euribor", 0))
+        spread, erro = validar_numero(request.form.get("spread", 0), "Spread", 0, 100)
+    if erro: return render_template("credito.html", erro=erro)
+        euribor, erro = validar_numero(request.form.get("euribor", 0), "Euribor", -100, 100)
+    if erro: return render_template("credito.html", erro=erro)
 
         resultado = calcular_credito(valor_imovel, entrada, prazo_anos, spread, euribor)
         tabela = calcular_tabela_amortizacao(valor_imovel, entrada, prazo_anos, spread, euribor, limite=12)
@@ -283,8 +297,10 @@ def rescisao():
     horas_formacao = 0
 
     if request.method == "POST":
-        vencimento_base = float(request.form.get("vencimento_base", 0))
-        subsidio_alimentacao = float(request.form.get("subsidio_alimentacao", 0))
+        vencimento_base, erro = validar_numero(request.form.get("vencimento_base", 0), "Vencimento base")
+    if erro: return render_template("rescisao.html", erro=erro)
+        subsidio_alimentacao, erro = validar_numero(request.form.get("subsidio_alimentacao", 0), "Subsídio alimentação")
+    if erro: return render_template("rescisao.html", erro=erro)
         data_inicio = request.form.get("data_inicio", "")
         data_fim = request.form.get("data_fim", "")
         motivo = request.form.get("motivo", "caducidade_termo")
@@ -330,7 +346,8 @@ def subsidio():
     resultado = None
 
     if request.method == "POST":
-        media_salarial = float(request.form["media_salarial"])
+        media_salarial, erro = validar_numero(request.form.get("media_salarial", 0), "Média salarial")
+    if erro: return render_template("subsidio.html", erro=erro)
         idade = int(request.form["idade"])
         meses_desconto = int(request.form["meses_desconto"])
 

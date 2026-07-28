@@ -10,6 +10,11 @@
 
         <section class="form-card">
             <form method="POST" action="/salario">
+            {% if erro %}
+            <div style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                ⚠️ {{ erro }}
+            </div>
+            {% endif %}
                 <div class="input-group full-width" style="margin-bottom: 20px;">
                     <label>Regime de Trabalho</label>
                     <select name="regime" id="regime-select" onchange="toggleRegime()">
