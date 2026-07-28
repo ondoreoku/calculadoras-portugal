@@ -1,4 +1,5 @@
 Flask==3.0.3
 flask-cors==4.0.0
 gunicorn==23.0.0
-feedparser==6.0.11Flask-Limiter==3.5.0
+feedparser==6.0.11
+Flask-Limiter==3.5.0
