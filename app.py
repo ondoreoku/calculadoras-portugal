@@ -50,6 +50,15 @@ from datetime import datetime
 # INICIALIZAÇÃO DA APLICAÇÃO
 # =============================================================================
 app = Flask(__name__)
+# ===== HEADERS DE SEGURANÇA =====
+@app.after_request
+def add_security_headers(response):
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "same-origin"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' https://cdnjs.buymeacoffee.com; style-src 'self'; img-src 'self' data:; frame-src 'self'; object-src 'none'"
+    return response
 
 # =============================================================================
 # CONFIGURAÇÃO CORS (apenas para os endpoints da API)
@@ -431,6 +440,14 @@ def health_check():
 # =============================================================================
 # INICIALIZAÇÃO DO SERVIDOR
 # =============================================================================
+# ===== TRATAMENTO DE ERROS =====
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template("500.html"), 500
+
+@app.errorhandler(404)
+def not_found(error):
+    return "<h1>404 - Página não encontrada</h1><p><a href='/'>Voltar ao início</a></p>", 404
 if __name__ == "__main__":
     print("=" * 60)
     print("  Calculadoras Portugal 2026")
