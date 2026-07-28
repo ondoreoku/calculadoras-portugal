@@ -4,13 +4,17 @@ import secrets
 from collections import defaultdict
 from flask import request, jsonify, render_template, make_response
 
+# Estruturas de dados
 failed_attempts = defaultdict(list)
-blocked_users = {}
-blocked_reasons = {}
+blocked_users = {}  # user_id → timestamp
+blocked_ips = {}    # ip → timestamp
 
-BLOCK_TIME = 900
-ATTACK_BLOCK_TIME = 3600
+# Configurações
+BLOCK_TIME = 900  # 15 minutos
+ATTACK_BLOCK_TIME = 3600  # 1 hora
+IP_BLOCK_TIME = 7200  # 2 horas
 
+# Padrões de ATAQUE
 ATTACK_PATTERNS = [
     r'<script', r'javascript:', r'onerror=', r'alert\(', r'<iframe',
     r' UNION ', r' SELECT ', r' DROP ', r' DELETE ', r' INSERT ',
@@ -33,23 +37,29 @@ def is_attack_payload(data):
             return True
     return False
 
-def is_blocked(user_id):
+def is_blocked(user_id, ip):
+    # Verificar bloqueio por IP
+    if ip in blocked_ips:
+        if time.time() < blocked_ips[ip]:
+            return True, "IP bloqueado por atividade suspeita"
+        else:
+            del blocked_ips[ip]
+    
+    # Verificar bloqueio por utilizador (cookie)
     if user_id in blocked_users:
         if time.time() < blocked_users[user_id]:
-            return True
+            return True, blocked_users.get(user_id, "Atividade suspeita")
         else:
             del blocked_users[user_id]
-            if user_id in blocked_reasons:
-                del blocked_reasons[user_id]
-    return False
+    
+    return False, ""
 
-def get_block_reason(user_id):
-    return blocked_reasons.get(user_id, "Atividade suspeita")
-
-def block_user(user_id, reason, duration=BLOCK_TIME):
+def block_user(user_id, ip, reason, duration=BLOCK_TIME):
+    # Bloquear o utilizador (cookie)
     blocked_users[user_id] = time.time() + duration
-    blocked_reasons[user_id] = reason
-    print(f"[BLOQUEIO] Utilizador {user_id[:8]} bloqueado: {reason}")
+    # Bloquear também o IP (prevenção)
+    blocked_ips[ip] = time.time() + IP_BLOCK_TIME
+    print(f"[BLOQUEIO] Utilizador {user_id[:8]} e IP {ip} bloqueados: {reason}")
 
 def check_ip_block():
     def decorator(f):
@@ -58,30 +68,36 @@ def check_ip_block():
         def decorated_function(*args, **kwargs):
             if request.method == 'POST':
                 user_id = get_user_id()
+                ip = request.remote_addr or '127.0.0.1'
                 
-                if is_blocked(user_id):
-                    reason = get_block_reason(user_id)
+                # Verificar bloqueio
+                is_blocked_flag, reason = is_blocked(user_id, ip)
+                if is_blocked_flag:
                     response = make_response(render_template("bloqueado.html", 
                                         user_id=user_id[:8],
+                                        ip=ip,
                                         motivo=reason, 
-                                        tempo=f"{int((blocked_users[user_id] - time.time()) // 60)} minutos"), 403)
+                                        tempo="60 minutos"), 403)
                     response.set_cookie('user_id', user_id, max_age=365*24*60*60, httponly=True, secure=True, samesite='Lax')
                     return response
                 
+                # Verificar se o pedido atual é um ataque
                 form_data = list(request.form.values())
                 all_data = " ".join(form_data)
                 
                 if is_attack_payload(all_data):
-                    print(f"[BLOQUEIO] ATAQUE DETETADO! Bloqueando utilizador {user_id[:8]}")
-                    block_user(user_id, f"🚫 ATAQUE DETETADO: {all_data[:50]}...", ATTACK_BLOCK_TIME)
+                    print(f"[BLOQUEIO] ATAQUE DETETADO! Bloqueando utilizador {user_id[:8]} e IP {ip}")
+                    block_user(user_id, ip, f"🚫 ATAQUE DETETADO: {all_data[:50]}...", ATTACK_BLOCK_TIME)
                     
                     response = make_response(render_template("bloqueado.html", 
                                         user_id=user_id[:8],
+                                        ip=ip,
                                         motivo="Tentativa de ataque detetada", 
                                         tempo="60 minutos"), 403)
                     response.set_cookie('user_id', user_id, max_age=365*24*60*60, httponly=True, secure=True, samesite='Lax')
                     return response
                 
+                # Se chegou aqui, o pedido é seguro
                 return f(*args, **kwargs)
             return f(*args, **kwargs)
         return decorated_function
@@ -99,7 +115,8 @@ def register_failed_attempt(user_id, data, endpoint=""):
     print(f"[DEBUG] Utilizador {user_id[:8]} - Erros normais: {total}")
     
     if total >= 20:
-        block_user(user_id, f"Muitas tentativas inválidas ({total})", BLOCK_TIME)
+        ip = request.remote_addr or '127.0.0.1'
+        block_user(user_id, ip, f"Muitas tentativas inválidas ({total})", BLOCK_TIME)
         return True
     
     return False
