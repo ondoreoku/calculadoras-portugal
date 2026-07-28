@@ -8,6 +8,7 @@ from flask import request, jsonify, render_template, make_response
 failed_attempts = defaultdict(list)
 blocked_users = {}  # user_id → timestamp
 blocked_ips = {}    # ip → timestamp
+blocked_reasons = {} # user_id → motivo (para a função get_block_reason)
 
 # Configurações
 BLOCK_TIME = 900  # 15 minutos
@@ -48,15 +49,23 @@ def is_blocked(user_id, ip):
     # Verificar bloqueio por utilizador (cookie)
     if user_id in blocked_users:
         if time.time() < blocked_users[user_id]:
-            return True, blocked_users.get(user_id, "Atividade suspeita")
+            reason = blocked_reasons.get(user_id, "Atividade suspeita")
+            return True, reason
         else:
             del blocked_users[user_id]
+            if user_id in blocked_reasons:
+                del blocked_reasons[user_id]
     
     return False, ""
+
+def get_block_reason(user_id):
+    """Retorna o motivo do bloqueio de um utilizador."""
+    return blocked_reasons.get(user_id, "Atividade suspeita")
 
 def block_user(user_id, ip, reason, duration=BLOCK_TIME):
     # Bloquear o utilizador (cookie)
     blocked_users[user_id] = time.time() + duration
+    blocked_reasons[user_id] = reason
     # Bloquear também o IP (prevenção)
     blocked_ips[ip] = time.time() + IP_BLOCK_TIME
     print(f"[BLOQUEIO] Utilizador {user_id[:8]} e IP {ip} bloqueados: {reason}")
