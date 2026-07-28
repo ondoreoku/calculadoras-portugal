@@ -50,14 +50,17 @@ from datetime import datetime
 # INICIALIZAÇÃO DA APLICAÇÃO
 # =============================================================================
 app = Flask(__name__)
-# ===== HEADERS DE SEGURANÇA =====
+
+# =============================================================================
+# HEADERS DE SEGURANÇA
+# =============================================================================
 @app.after_request
 def add_security_headers(response):
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Referrer-Policy"] = "same-origin"
-    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' https://cdnjs.buymeacoffee.com; style-src 'self'; img-src 'self' data:; frame-src 'self'; object-src 'none'"
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['Referrer-Policy'] = 'same-origin'
+    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' https://cdnjs.buymeacoffee.com; style-src 'self'; img-src 'self' data:; frame-src 'self'; object-src 'none'"
     return response
 
 # =============================================================================
@@ -84,6 +87,18 @@ from utils.salario import calcular_salario
 from utils.rescisao import calcular_rescisao
 
 DATABASE = "database.db"
+
+# =============================================================================
+# FUNÇÃO DE VALIDAÇÃO DE INPUTS
+# =============================================================================
+def validar_numero(valor, nome="valor", min_val=0, max_val=1000000):
+    try:
+        num = float(valor)
+        if num < min_val or num > max_val:
+            return None, f"{nome} deve estar entre {min_val} e {max_val}"
+        return num, None
+    except ValueError:
+        return None, f"{nome} inválido"
 
 # =============================================================================
 # INICIALIZAÇÃO AUTOMÁTICA DA BASE DE DADOS
@@ -182,14 +197,6 @@ def historico():
     return render_template("historico.html", registos=registos)
 
 @app.route("/salario", methods=["GET", "POST"])
-def validar_numero(valor, nome="valor", min_val=0, max_val=1000000):
-    try:
-        num = float(valor)
-        if num < min_val or num > max_val:
-            return None, f"{nome} deve estar entre {min_val} e {max_val}"
-        return num, None
-    except ValueError:
-        return None, f"{nome} inválido"
 def salario():
     resultado = None
     regime = "outrem"
@@ -199,15 +206,27 @@ def salario():
     coeficiente_atividade = 0.75
     retencao_irs = 0.15
     isento_ss = "nao"
+    erro = None
 
     if request.method == "POST":
         regime = request.form.get("regime", "outrem")
         bruto, erro = validar_numero(request.form.get("bruto", 0), "Salário")
-    if erro: return render_template("salario.html", erro=erro)
+        
+        if erro:
+            return render_template("salario.html", 
+                                erro=erro,
+                                regime=regime,
+                                bruto=bruto if bruto else 0,
+                                subsidio_alimentacao=subsidio_alimentacao,
+                                estado_civil=estado_civil,
+                                coeficiente_atividade=coeficiente_atividade,
+                                retencao_irs=retencao_irs,
+                                isento_ss=isento_ss)
 
         if regime == "outrem":
             subsidio_alimentacao, erro = validar_numero(request.form.get("subsidio_alimentacao", 0), "Subsídio alimentação")
-    if erro: return render_template("rescisao.html", erro=erro)
+            if erro:
+                return render_template("salario.html", erro=erro)
             estado_civil = request.form.get("estado_civil", "solteiro")
             resultado = calcular_salario(
                 bruto=bruto,
@@ -216,8 +235,12 @@ def salario():
                 estado_civil=estado_civil
             )
         else:
-            coeficiente_atividade = float(request.form.get("coeficiente_atividade", 0.75))
-            retencao_irs = float(request.form.get("retencao_irs", 0.15))
+            coeficiente_atividade, erro = validar_numero(request.form.get("coeficiente_atividade", 0.75), "Coeficiente de atividade", 0, 1)
+            if erro:
+                return render_template("salario.html", erro=erro)
+            retencao_irs, erro = validar_numero(request.form.get("retencao_irs", 0.15), "Retenção IRS", 0, 1)
+            if erro:
+                return render_template("salario.html", erro=erro)
             isento_ss = request.form.get("isento_ss", "nao")
             resultado = calcular_salario(
                 bruto=bruto,
@@ -243,6 +266,7 @@ def salario():
 
     return render_template("salario.html",
                           resultado=resultado,
+                          erro=erro,
                           regime=regime,
                           bruto=bruto,
                           subsidio_alimentacao=subsidio_alimentacao,
@@ -255,17 +279,29 @@ def salario():
 def credito():
     resultado = None
     tabela = None
+    erro = None
 
     if request.method == "POST":
         valor_imovel, erro = validar_numero(request.form.get("valor_imovel", 0), "Valor do imóvel")
-    if erro: return render_template("credito.html", erro=erro)
+        if erro:
+            return render_template("credito.html", erro=erro)
+            
         entrada, erro = validar_numero(request.form.get("entrada", 0), "Entrada")
-    if erro: return render_template("credito.html", erro=erro)
-        prazo_anos = int(request.form.get("prazo_anos", 0))
+        if erro:
+            return render_template("credito.html", erro=erro)
+            
+        prazo_anos, erro = validar_numero(request.form.get("prazo_anos", 0), "Prazo", 1, 50)
+        if erro:
+            return render_template("credito.html", erro=erro)
+        prazo_anos = int(prazo_anos)
+        
         spread, erro = validar_numero(request.form.get("spread", 0), "Spread", 0, 100)
-    if erro: return render_template("credito.html", erro=erro)
+        if erro:
+            return render_template("credito.html", erro=erro)
+            
         euribor, erro = validar_numero(request.form.get("euribor", 0), "Euribor", -100, 100)
-    if erro: return render_template("credito.html", erro=erro)
+        if erro:
+            return render_template("credito.html", erro=erro)
 
         resultado = calcular_credito(valor_imovel, entrada, prazo_anos, spread, euribor)
         tabela = calcular_tabela_amortizacao(valor_imovel, entrada, prazo_anos, spread, euribor, limite=12)
@@ -282,11 +318,12 @@ def credito():
             resultado_dict=resultado
         )
 
-    return render_template("credito.html", resultado=resultado, tabela=tabela)
+    return render_template("credito.html", resultado=resultado, tabela=tabela, erro=erro)
 
 @app.route("/rescisao", methods=["GET", "POST"])
 def rescisao():
     resultado = None
+    erro = None
     vencimento_base = 1200
     subsidio_alimentacao = 6.0
     data_inicio = "2020-01-15"
@@ -298,15 +335,30 @@ def rescisao():
 
     if request.method == "POST":
         vencimento_base, erro = validar_numero(request.form.get("vencimento_base", 0), "Vencimento base")
-    if erro: return render_template("rescisao.html", erro=erro)
+        if erro:
+            return render_template("rescisao.html", erro=erro)
+            
         subsidio_alimentacao, erro = validar_numero(request.form.get("subsidio_alimentacao", 0), "Subsídio alimentação")
-    if erro: return render_template("rescisao.html", erro=erro)
+        if erro:
+            return render_template("rescisao.html", erro=erro)
+            
         data_inicio = request.form.get("data_inicio", "")
         data_fim = request.form.get("data_fim", "")
         motivo = request.form.get("motivo", "caducidade_termo")
-        meses_layoff = int(request.form.get("meses_layoff", 0))
-        ferias_vencidas = int(request.form.get("ferias_vencidas", 0))
-        horas_formacao = int(request.form.get("horas_formacao", 0))
+        meses_layoff, erro = validar_numero(request.form.get("meses_layoff", 0), "Meses em lay-off", 0, 100)
+        if erro:
+            return render_template("rescisao.html", erro=erro)
+        meses_layoff = int(meses_layoff)
+        
+        ferias_vencidas, erro = validar_numero(request.form.get("ferias_vencidas", 0), "Férias vencidas", 0, 1000)
+        if erro:
+            return render_template("rescisao.html", erro=erro)
+        ferias_vencidas = int(ferias_vencidas)
+        
+        horas_formacao, erro = validar_numero(request.form.get("horas_formacao", 0), "Horas de formação", 0, 1000)
+        if erro:
+            return render_template("rescisao.html", erro=erro)
+        horas_formacao = int(horas_formacao)
 
         resultado = calcular_rescisao(
             vencimento_base=vencimento_base,
@@ -332,6 +384,7 @@ def rescisao():
 
     return render_template("rescisao.html",
                           resultado=resultado,
+                          erro=erro,
                           vencimento_base=vencimento_base,
                           subsidio_alimentacao=subsidio_alimentacao,
                           data_inicio=data_inicio,
@@ -344,12 +397,22 @@ def rescisao():
 @app.route("/subsidio", methods=["GET", "POST"])
 def subsidio():
     resultado = None
+    erro = None
 
     if request.method == "POST":
         media_salarial, erro = validar_numero(request.form.get("media_salarial", 0), "Média salarial")
-    if erro: return render_template("subsidio.html", erro=erro)
-        idade = int(request.form["idade"])
-        meses_desconto = int(request.form["meses_desconto"])
+        if erro:
+            return render_template("subsidio.html", erro=erro)
+            
+        idade, erro = validar_numero(request.form.get("idade", 0), "Idade", 16, 100)
+        if erro:
+            return render_template("subsidio.html", erro=erro)
+        idade = int(idade)
+        
+        meses_desconto, erro = validar_numero(request.form.get("meses_desconto", 0), "Meses de desconto", 0, 999)
+        if erro:
+            return render_template("subsidio.html", erro=erro)
+        meses_desconto = int(meses_desconto)
 
         resultado = calcular_subsidio(media_salarial, idade, meses_desconto)
 
@@ -363,7 +426,7 @@ def subsidio():
             resultado_dict=resultado
         )
 
-    return render_template("subsidio.html", resultado=resultado)
+    return render_template("subsidio.html", resultado=resultado, erro=erro)
 
 # =============================================================================
 # ROTAS DA API (para os frontends da Vercel)
@@ -455,9 +518,8 @@ def health_check():
     return jsonify({"status": "ok", "message": "API Calculadoras Portugal 2026"})
 
 # =============================================================================
-# INICIALIZAÇÃO DO SERVIDOR
+# TRATAMENTO DE ERROS
 # =============================================================================
-# ===== TRATAMENTO DE ERROS =====
 @app.errorhandler(500)
 def internal_error(error):
     return render_template("500.html"), 500
@@ -465,6 +527,10 @@ def internal_error(error):
 @app.errorhandler(404)
 def not_found(error):
     return "<h1>404 - Página não encontrada</h1><p><a href='/'>Voltar ao início</a></p>", 404
+
+# =============================================================================
+# INICIALIZAÇÃO DO SERVIDOR
+# =============================================================================
 if __name__ == "__main__":
     print("=" * 60)
     print("  Calculadoras Portugal 2026")
