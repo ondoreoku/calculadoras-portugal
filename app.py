@@ -43,6 +43,7 @@ from utils.salario import calcular_salario
 from utils.rescisao import calcular_rescisao
 from rate_limits import limiter
 from security_logger import log_security_event, log_brute_force_attempt, log_invalid_input
+from ip_blocker import check_ip_block, register_failed_attempt, is_blocked, get_block_reason
 
 DATABASE = "database.db"
 
@@ -143,6 +144,7 @@ def historico():
     return render_template("historico.html", registos=registos)
 
 @app.route("/salario", methods=["GET", "POST"])
+@check_ip_block()
 @limiter.limit("5 per minute")
 def salario():
     resultado = None
@@ -161,6 +163,7 @@ def salario():
         
         if erro:
             log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+        register_failed_attempt(request.remote_addr, "invalid_input")
             return render_template("salario.html", 
                                 erro=erro,
                                 regime=regime,
@@ -401,6 +404,7 @@ def subsidio():
 # =============================================================================
 
 @app.route("/api/salario", methods=["POST"])
+@check_ip_block()
 @limiter.limit("10 per minute")
 def api_salario():
     try:
