@@ -163,7 +163,7 @@ def salario():
         
         if erro:
             log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("salario.html", 
                                 erro=erro,
                                 regime=regime,
@@ -178,7 +178,7 @@ def salario():
             subsidio_alimentacao, erro = validar_numero(request.form.get("subsidio_alimentacao", 0), "Subsídio alimentação")
             if erro:
                 log_invalid_input(request.remote_addr, "/salario", request.form.get("subsidio_alimentacao", ""))
-                register_failed_attempt(request.remote_addr, "invalid_input")
+                register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
                 return render_template("salario.html", erro=erro)
             estado_civil = request.form.get("estado_civil", "solteiro")
             resultado = calcular_salario(
@@ -191,12 +191,12 @@ def salario():
             coeficiente_atividade, erro = validar_numero(request.form.get("coeficiente_atividade", 0.75), "Coeficiente de atividade", 0, 1)
             if erro:
                 log_invalid_input(request.remote_addr, "/salario", request.form.get("coeficiente_atividade", ""))
-                register_failed_attempt(request.remote_addr, "invalid_input")
+                register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
                 return render_template("salario.html", erro=erro)
             retencao_irs, erro = validar_numero(request.form.get("retencao_irs", 0.15), "Retenção IRS", 0, 1)
             if erro:
                 log_invalid_input(request.remote_addr, "/salario", request.form.get("retencao_irs", ""))
-                register_failed_attempt(request.remote_addr, "invalid_input")
+                register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
                 return render_template("salario.html", erro=erro)
             isento_ss = request.form.get("isento_ss", "nao")
             resultado = calcular_salario(
@@ -245,32 +245,32 @@ def credito():
         valor_imovel, erro = validar_numero(request.form.get("valor_imovel", 0), "Valor do imóvel")
         if erro:
             log_invalid_input(request.remote_addr, "/credito", request.form.get("valor_imovel", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("credito.html", erro=erro)
             
         entrada, erro = validar_numero(request.form.get("entrada", 0), "Entrada")
         if erro:
             log_invalid_input(request.remote_addr, "/credito", request.form.get("entrada", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("credito.html", erro=erro)
             
         prazo_anos, erro = validar_numero(request.form.get("prazo_anos", 0), "Prazo", 1, 50)
         if erro:
             log_invalid_input(request.remote_addr, "/credito", request.form.get("prazo_anos", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("credito.html", erro=erro)
         prazo_anos = int(prazo_anos)
         
         spread, erro = validar_numero(request.form.get("spread", 0), "Spread", 0, 100)
         if erro:
             log_invalid_input(request.remote_addr, "/credito", request.form.get("spread", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("credito.html", erro=erro)
             
         euribor, erro = validar_numero(request.form.get("euribor", 0), "Euribor", -100, 100)
         if erro:
             log_invalid_input(request.remote_addr, "/credito", request.form.get("euribor", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("credito.html", erro=erro)
 
         resultado = calcular_credito(valor_imovel, entrada, prazo_anos, spread, euribor)
@@ -310,13 +310,13 @@ def rescisao():
         vencimento_base, erro = validar_numero(request.form.get("vencimento_base", 0), "Vencimento base")
         if erro:
             log_invalid_input(request.remote_addr, "/rescisao", request.form.get("vencimento_base", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("rescisao.html", erro=erro)
             
         subsidio_alimentacao, erro = validar_numero(request.form.get("subsidio_alimentacao", 0), "Subsídio alimentação")
         if erro:
             log_invalid_input(request.remote_addr, "/rescisao", request.form.get("subsidio_alimentacao", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("rescisao.html", erro=erro)
             
         data_inicio = request.form.get("data_inicio", "")
@@ -325,21 +325,21 @@ def rescisao():
         meses_layoff, erro = validar_numero(request.form.get("meses_layoff", 0), "Meses em lay-off", 0, 100)
         if erro:
             log_invalid_input(request.remote_addr, "/rescisao", request.form.get("meses_layoff", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("rescisao.html", erro=erro)
         meses_layoff = int(meses_layoff)
         
         ferias_vencidas, erro = validar_numero(request.form.get("ferias_vencidas", 0), "Férias vencidas", 0, 1000)
         if erro:
             log_invalid_input(request.remote_addr, "/rescisao", request.form.get("ferias_vencidas", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("rescisao.html", erro=erro)
         ferias_vencidas = int(ferias_vencidas)
         
         horas_formacao, erro = validar_numero(request.form.get("horas_formacao", 0), "Horas de formação", 0, 1000)
         if erro:
             log_invalid_input(request.remote_addr, "/rescisao", request.form.get("horas_formacao", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("rescisao.html", erro=erro)
         horas_formacao = int(horas_formacao)
 
@@ -389,20 +389,20 @@ def subsidio():
         media_salarial, erro = validar_numero(request.form.get("media_salarial", 0), "Média salarial")
         if erro:
             log_invalid_input(request.remote_addr, "/subsidio", request.form.get("media_salarial", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("subsidio.html", erro=erro)
             
         idade, erro = validar_numero(request.form.get("idade", 0), "Idade", 16, 100)
         if erro:
             log_invalid_input(request.remote_addr, "/subsidio", request.form.get("idade", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("subsidio.html", erro=erro)
         idade = int(idade)
         
         meses_desconto, erro = validar_numero(request.form.get("meses_desconto", 0), "Meses de desconto", 0, 999)
         if erro:
             log_invalid_input(request.remote_addr, "/subsidio", request.form.get("meses_desconto", ""))
-            register_failed_attempt(request.remote_addr, "invalid_input")
+            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
             return render_template("subsidio.html", erro=erro)
         meses_desconto = int(meses_desconto)
 
