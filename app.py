@@ -41,6 +41,7 @@ COMO INICIAR:
 
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_cors import CORS
+from limits import limiter
 import sqlite3
 import json
 import os
@@ -50,6 +51,11 @@ from datetime import datetime
 # INICIALIZAÇÃO DA APLICAÇÃO
 # =============================================================================
 app = Flask(__name__)
+
+# =============================================================================
+# RATE LIMITING
+# =============================================================================
+limiter.init_app(app)
 
 # =============================================================================
 # HEADERS DE SEGURANÇA
@@ -197,6 +203,7 @@ def historico():
     return render_template("historico.html", registos=registos)
 
 @app.route("/salario", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
 def salario():
     resultado = None
     regime = "outrem"
@@ -433,6 +440,7 @@ def subsidio():
 # =============================================================================
 
 @app.route("/api/salario", methods=["POST"])
+@limiter.limit("10 per minute")
 def api_salario():
     try:
         dados = request.get_json()
