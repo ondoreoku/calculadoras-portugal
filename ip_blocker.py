@@ -3,15 +3,20 @@ import re
 import secrets
 from collections import defaultdict
 from flask import request, jsonify, render_template, make_response
+import logging
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Estruturas de dados
 failed_attempts = defaultdict(list)
 blocked_users = {}  # user_id → timestamp
 blocked_reasons = {}  # user_id → motivo
 
-# Configurações
-BLOCK_TIME = 900  # 15 minutos
-ATTACK_BLOCK_TIME = 3600  # 1 hora
+# Configurações (AUMENTADAS)
+BLOCK_TIME = 7200  # 2 horas (para erros normais)
+ATTACK_BLOCK_TIME = 86400  # 24 horas (para ataques)
 
 # Padrões de ATAQUE
 ATTACK_PATTERNS = [
@@ -52,7 +57,7 @@ def get_block_reason(user_id):
 def block_user(user_id, reason, duration=BLOCK_TIME):
     blocked_users[user_id] = time.time() + duration
     blocked_reasons[user_id] = reason
-    print(f"[BLOQUEIO] Utilizador {user_id[:8]} bloqueado: {reason}")
+    logger.info(f"[BLOQUEIO] Utilizador {user_id[:8]} bloqueado: {reason}")
 
 def check_ip_block():
     def decorator(f):
@@ -77,13 +82,13 @@ def check_ip_block():
                 all_data = " ".join(form_data)
                 
                 if is_attack_payload(all_data):
-                    print(f"[BLOQUEIO] ATAQUE DETETADO! Bloqueando utilizador {user_id[:8]}")
+                    logger.info(f"[BLOQUEIO] ATAQUE DETETADO! Bloqueando utilizador {user_id[:8]}")
                     block_user(user_id, f"🚫 ATAQUE DETETADO: {all_data[:50]}...", ATTACK_BLOCK_TIME)
                     
                     response = make_response(render_template("bloqueado.html", 
                                         user_id=user_id[:8],
                                         motivo="Tentativa de ataque detetada", 
-                                        tempo="60 minutos"), 403)
+                                        tempo="24 horas"), 403)
                     response.set_cookie('user_id', user_id, max_age=365*24*60*60, httponly=True, secure=True, samesite='Lax')
                     return response
                 
@@ -101,7 +106,7 @@ def register_failed_attempt(user_id, data, endpoint=""):
     failed_attempts[user_id].append(now)
     
     total = len(failed_attempts[user_id])
-    print(f"[DEBUG] Utilizador {user_id[:8]} - Erros normais: {total}")
+    logger.info(f"[DEBUG] Utilizador {user_id[:8]} - Erros normais: {total}")
     
     if total >= 20:
         block_user(user_id, f"Muitas tentativas inválidas ({total})", BLOCK_TIME)
