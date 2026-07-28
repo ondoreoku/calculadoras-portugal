@@ -41,7 +41,7 @@ COMO INICIAR:
 
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_cors import CORS
-from limits import limiter
+from rate_limits import limiter
 import sqlite3
 import json
 import os
