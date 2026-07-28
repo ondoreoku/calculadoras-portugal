@@ -33,10 +33,11 @@ def check_ip_block():
         from functools import wraps
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            ip = request.remote_addr or '127.0.0.1'
-            if is_blocked(ip):
-                reason = get_block_reason(ip)
-                return render_template("bloqueado.html", ip=ip, motivo=reason, tempo=f"{int((blocked_ips[ip] - time.time()) // 60)} minutos"), 403
+            if request.method == 'POST':
+                ip = request.remote_addr or '127.0.0.1'
+                if is_blocked(ip):
+                    reason = get_block_reason(ip)
+                    return render_template("bloqueado.html", ip=ip, motivo=reason, tempo=f"{int((blocked_ips[ip] - time.time()) // 60)} minutos"), 403
             return f(*args, **kwargs)
         return decorated_function
     return decorator
