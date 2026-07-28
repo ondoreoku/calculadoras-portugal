@@ -40,7 +40,6 @@ def get_user_id():
     return user_id
 
 def get_client_ip():
-    """Obtém o IP real do cliente (mesmo com proxy)."""
     if request.headers.get('X-Forwarded-For'):
         return request.headers.get('X-Forwarded-For').split(',')[0].strip()
     return request.remote_addr or '127.0.0.1'
@@ -83,21 +82,14 @@ def block_user(user_id, reason, duration=BLOCK_TIME):
     logger.info(f"[BLOQUEIO] Utilizador {user_id[:8]} bloqueado: {reason}")
 
 def check_rate_limit(ip):
-    """Verifica rate limiting por IP com bloqueio progressivo."""
     now = time.time()
-    
-    # Limpar pedidos antigos
     ip_request_counts[ip] = [t for t in ip_request_counts[ip] if now - t < RATE_WINDOW]
     
-    # Verificar se excedeu o limite
     if len(ip_request_counts[ip]) >= RATE_LIMIT:
-        # Verificar se já foi bloqueado antes (escalação)
         if ip in ip_blocked:
-            # Bloqueio progressivo: 1 hora
             duration = RATE_BLOCK_ESCALATION
             reason = f"Demasiados pedidos (reincidente) - {len(ip_request_counts[ip])} em 60s"
         else:
-            # Primeiro bloqueio: 5 minutos
             duration = RATE_BLOCK_TIME
             reason = f"Demasiados pedidos ({len(ip_request_counts[ip])} em 60s)"
         
@@ -131,10 +123,17 @@ def check_ip_block():
                 # Verificar bloqueio por utilizador (cookie)
                 is_blocked_flag, reason = is_blocked(user_id, ip)
                 if is_blocked_flag:
+                    # Verificar se o user_id está em blocked_users antes de aceder
+                    if user_id in blocked_users:
+                        minutes = int((blocked_users[user_id] - time.time()) // 60)
+                        tempo = f"{minutes} minutos"
+                    else:
+                        tempo = "vários minutos"
+                    
                     response = make_response(render_template("bloqueado.html", 
                                         user_id=user_id[:8],
                                         motivo=reason, 
-                                        tempo=f"{int((blocked_users[user_id] - time.time()) // 60)} minutos"), 403)
+                                        tempo=tempo), 403)
                     response.set_cookie('user_id', user_id, max_age=365*24*60*60, httponly=True, secure=True, samesite='Lax')
                     return response
                 
