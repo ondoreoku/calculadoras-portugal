@@ -2,61 +2,16 @@
 ================================================================================
 APP.PY — Aplicação Flask Principal
 ================================================================================
-
-O QUE FAZ:
-    Servidor web Flask com rotas para todas as páginas do site.
-    Integração com base de dados SQLite (notícias, histórico, taxas).
-    Processamento de formulários das 4 calculadoras.
-
-ROTAS:
-    GET  /                    → Home page (com notícias do SQLite)
-    GET  /salario             → Calculadora de Salário Líquido
-    GET/POST /salario         → Processa formulário + mostra resultados
-    GET  /credito             → Simulador de Crédito Habitação
-    GET/POST /credito         → Processa formulário + mostra resultados
-    GET  /rescisao            → Calculadora de Rescisão
-    GET/POST /rescisao        → Processa formulário + mostra resultados
-    GET/POST /subsidio        → Simulador de Subsídio Desemprego (funcional)
-    GET  /atualizar_noticias  → Força atualização do feed RSS
-    GET  /historico           → Histórico de cálculos
-
-    --- ROTAS DA API (para frontends Vercel) ---
-    POST /api/salario         → API para Salário Líquido
-    POST /api/credito         → API para Crédito Habitação
-    POST /api/rescisao        → API para Rescisão
-    POST /api/subsidio        → API para Subsídio Desemprego
-    GET  /api/health          → Health check
-
-DEPENDÊNCIAS:
-    — Flask: pip install flask
-    — flask-cors: pip install flask-cors
-    — feedparser: pip install feedparser (para notícias RSS)
-
-COMO INICIAR:
-    1. python3 initdb.py    (cria a base de dados — só uma vez)
-    2. python3 app.py       (inicia o servidor)
-    3. Abrir http://127.0.0.1:5000 no browser
-================================================================================
 """
 
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_cors import CORS
-from rate_limits import limiter
-from security_logger import log_security_event, log_brute_force_attempt, log_invalid_input
 import sqlite3
 import json
 import os
 from datetime import datetime
 
-# =============================================================================
-# INICIALIZAÇÃO DA APLICAÇÃO
-# =============================================================================
 app = Flask(__name__)
-
-# =============================================================================
-# RATE LIMITING
-# =============================================================================
-limiter.init_app(app)
 
 # =============================================================================
 # HEADERS DE SEGURANÇA
@@ -70,9 +25,6 @@ def add_security_headers(response):
     response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' https://cdnjs.buymeacoffee.com; style-src 'self'; img-src 'self' data:; frame-src 'self'; object-src 'none'"
     return response
 
-# =============================================================================
-# CONFIGURAÇÃO CORS (apenas para os endpoints da API)
-# =============================================================================
 CORS(app, resources={
     r"/api/*": {
         "origins": [
@@ -84,20 +36,16 @@ CORS(app, resources={
     }
 })
 
-# =============================================================================
-# IMPORTS DOS MÓDULOS DE CÁLCULO
-# =============================================================================
 from utils.noticias import get_noticias, atualizar_noticias, limpar_cache_antigo
 from utils.subsidio import calcular_subsidio
 from utils.credito import calcular_credito, calcular_tabela_amortizacao
 from utils.salario import calcular_salario
 from utils.rescisao import calcular_rescisao
+from rate_limits import limiter
+from security_logger import log_security_event, log_brute_force_attempt, log_invalid_input
 
 DATABASE = "database.db"
 
-# =============================================================================
-# FUNÇÃO DE VALIDAÇÃO DE INPUTS
-# =============================================================================
 def validar_numero(valor, nome="valor", min_val=0, max_val=1000000):
     try:
         num = float(valor)
@@ -107,11 +55,7 @@ def validar_numero(valor, nome="valor", min_val=0, max_val=1000000):
     except ValueError:
         return None, f"{nome} inválido"
 
-# =============================================================================
-# INICIALIZAÇÃO AUTOMÁTICA DA BASE DE DADOS
-# =============================================================================
 def init_db_if_missing():
-    """Cria a base de dados se não existir (necessário no Render)."""
     if not os.path.exists(DATABASE):
         print("[INFO] Base de dados não encontrada. A criar...")
         import initdb
@@ -123,23 +67,17 @@ def init_db_if_missing():
             limpar_cache_antigo()
             print(f"[OK] {inseridas} notícias inseridas automaticamente")
         except Exception as e:
-        log_security_event("API_ERROR", request.remote_addr, str(e))
             print(f"[AVISO] Não foi possível atualizar notícias: {e}")
         print("[OK] Base de dados criada com sucesso")
 
 init_db_if_missing()
 
-# =============================================================================
-# FUNÇÕES AUXILIARES
-# =============================================================================
 def get_db():
-    """Abre conexão com SQLite."""
     con = sqlite3.connect(DATABASE)
     con.row_factory = sqlite3.Row
     return con
 
 def guardar_historico(tipo, inputs_dict, resultado_dict):
-    """Guarda um cálculo no histórico da base de dados."""
     con = get_db()
     cur = con.cursor()
     cur.execute("""
@@ -154,7 +92,7 @@ def guardar_historico(tipo, inputs_dict, resultado_dict):
     con.close()
 
 # =============================================================================
-# ROTAS HTML (PÁGINAS DO SITE)
+# ROTAS HTML
 # =============================================================================
 
 @app.route("/")
@@ -169,7 +107,6 @@ def atualizar_noticias_rota():
         limpar_cache_antigo()
         print(f"[INFO] Atualização concluída: {inseridas} notícias novas")
     except Exception as e:
-        log_security_event("API_ERROR", request.remote_addr, str(e))
         print(f"[ERRO] Falha na atualização: {e}")
     return redirect(url_for("home"))
 
@@ -237,11 +174,10 @@ def salario():
         if regime == "outrem":
             subsidio_alimentacao, erro = validar_numero(request.form.get("subsidio_alimentacao", 0), "Subsídio alimentação")
             if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+                log_invalid_input(request.remote_addr, "/salario", request.form.get("subsidio_alimentacao", ""))
                 return render_template("salario.html", erro=erro)
             estado_civil = request.form.get("estado_civil", "solteiro")
             resultado = calcular_salario(
-            log_security_event("CALCULO_SALARIO", request.remote_addr, f"Bruto: {bruto}")
                 bruto=bruto,
                 regime="outrem",
                 subsidio_alimentacao=subsidio_alimentacao,
@@ -250,15 +186,14 @@ def salario():
         else:
             coeficiente_atividade, erro = validar_numero(request.form.get("coeficiente_atividade", 0.75), "Coeficiente de atividade", 0, 1)
             if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+                log_invalid_input(request.remote_addr, "/salario", request.form.get("coeficiente_atividade", ""))
                 return render_template("salario.html", erro=erro)
             retencao_irs, erro = validar_numero(request.form.get("retencao_irs", 0.15), "Retenção IRS", 0, 1)
             if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+                log_invalid_input(request.remote_addr, "/salario", request.form.get("retencao_irs", ""))
                 return render_template("salario.html", erro=erro)
             isento_ss = request.form.get("isento_ss", "nao")
             resultado = calcular_salario(
-            log_security_event("CALCULO_SALARIO", request.remote_addr, f"Bruto: {bruto}")
                 bruto=bruto,
                 regime="eni",
                 coeficiente_atividade=coeficiente_atividade,
@@ -266,6 +201,7 @@ def salario():
                 isento_ss=isento_ss
             )
 
+        log_security_event("CALCULO_SALARIO", request.remote_addr, f"Bruto: {bruto}")
         guardar_historico(
             tipo="salario",
             inputs_dict={
@@ -300,33 +236,34 @@ def credito():
     if request.method == "POST":
         valor_imovel, erro = validar_numero(request.form.get("valor_imovel", 0), "Valor do imóvel")
         if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+            log_invalid_input(request.remote_addr, "/credito", request.form.get("valor_imovel", ""))
             return render_template("credito.html", erro=erro)
             
         entrada, erro = validar_numero(request.form.get("entrada", 0), "Entrada")
         if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+            log_invalid_input(request.remote_addr, "/credito", request.form.get("entrada", ""))
             return render_template("credito.html", erro=erro)
             
         prazo_anos, erro = validar_numero(request.form.get("prazo_anos", 0), "Prazo", 1, 50)
         if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+            log_invalid_input(request.remote_addr, "/credito", request.form.get("prazo_anos", ""))
             return render_template("credito.html", erro=erro)
         prazo_anos = int(prazo_anos)
         
         spread, erro = validar_numero(request.form.get("spread", 0), "Spread", 0, 100)
         if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+            log_invalid_input(request.remote_addr, "/credito", request.form.get("spread", ""))
             return render_template("credito.html", erro=erro)
             
         euribor, erro = validar_numero(request.form.get("euribor", 0), "Euribor", -100, 100)
         if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+            log_invalid_input(request.remote_addr, "/credito", request.form.get("euribor", ""))
             return render_template("credito.html", erro=erro)
 
         resultado = calcular_credito(valor_imovel, entrada, prazo_anos, spread, euribor)
         tabela = calcular_tabela_amortizacao(valor_imovel, entrada, prazo_anos, spread, euribor, limite=12)
 
+        log_security_event("CALCULO_CREDITO", request.remote_addr, f"Valor: {valor_imovel}")
         guardar_historico(
             tipo="credito",
             inputs_dict={
@@ -357,12 +294,12 @@ def rescisao():
     if request.method == "POST":
         vencimento_base, erro = validar_numero(request.form.get("vencimento_base", 0), "Vencimento base")
         if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+            log_invalid_input(request.remote_addr, "/rescisao", request.form.get("vencimento_base", ""))
             return render_template("rescisao.html", erro=erro)
             
         subsidio_alimentacao, erro = validar_numero(request.form.get("subsidio_alimentacao", 0), "Subsídio alimentação")
         if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+            log_invalid_input(request.remote_addr, "/rescisao", request.form.get("subsidio_alimentacao", ""))
             return render_template("rescisao.html", erro=erro)
             
         data_inicio = request.form.get("data_inicio", "")
@@ -370,19 +307,19 @@ def rescisao():
         motivo = request.form.get("motivo", "caducidade_termo")
         meses_layoff, erro = validar_numero(request.form.get("meses_layoff", 0), "Meses em lay-off", 0, 100)
         if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+            log_invalid_input(request.remote_addr, "/rescisao", request.form.get("meses_layoff", ""))
             return render_template("rescisao.html", erro=erro)
         meses_layoff = int(meses_layoff)
         
         ferias_vencidas, erro = validar_numero(request.form.get("ferias_vencidas", 0), "Férias vencidas", 0, 1000)
         if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+            log_invalid_input(request.remote_addr, "/rescisao", request.form.get("ferias_vencidas", ""))
             return render_template("rescisao.html", erro=erro)
         ferias_vencidas = int(ferias_vencidas)
         
         horas_formacao, erro = validar_numero(request.form.get("horas_formacao", 0), "Horas de formação", 0, 1000)
         if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+            log_invalid_input(request.remote_addr, "/rescisao", request.form.get("horas_formacao", ""))
             return render_template("rescisao.html", erro=erro)
         horas_formacao = int(horas_formacao)
 
@@ -397,6 +334,7 @@ def rescisao():
             horas_formacao=horas_formacao
         )
 
+        log_security_event("CALCULO_RESCISAO", request.remote_addr, f"Vencimento: {vencimento_base}")
         guardar_historico(
             tipo="rescisao",
             inputs_dict={
@@ -428,23 +366,24 @@ def subsidio():
     if request.method == "POST":
         media_salarial, erro = validar_numero(request.form.get("media_salarial", 0), "Média salarial")
         if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+            log_invalid_input(request.remote_addr, "/subsidio", request.form.get("media_salarial", ""))
             return render_template("subsidio.html", erro=erro)
             
         idade, erro = validar_numero(request.form.get("idade", 0), "Idade", 16, 100)
         if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+            log_invalid_input(request.remote_addr, "/subsidio", request.form.get("idade", ""))
             return render_template("subsidio.html", erro=erro)
         idade = int(idade)
         
         meses_desconto, erro = validar_numero(request.form.get("meses_desconto", 0), "Meses de desconto", 0, 999)
         if erro:
-            log_invalid_input(request.remote_addr, "/salario", request.form.get("bruto", ""))
+            log_invalid_input(request.remote_addr, "/subsidio", request.form.get("meses_desconto", ""))
             return render_template("subsidio.html", erro=erro)
         meses_desconto = int(meses_desconto)
 
         resultado = calcular_subsidio(media_salarial, idade, meses_desconto)
 
+        log_security_event("CALCULO_SUBSIDIO", request.remote_addr, f"Média: {media_salarial}")
         guardar_historico(
             tipo="subsidio",
             inputs_dict={
@@ -458,7 +397,7 @@ def subsidio():
     return render_template("subsidio.html", resultado=resultado, erro=erro)
 
 # =============================================================================
-# ROTAS DA API (para os frontends da Vercel)
+# ROTAS DA API
 # =============================================================================
 
 @app.route("/api/salario", methods=["POST"])
@@ -470,7 +409,6 @@ def api_salario():
             return jsonify({"erro": "Dados inválidos."}), 400
         if dados.get("regime") == "eni":
             resultado = calcular_salario(
-            log_security_event("CALCULO_SALARIO", request.remote_addr, f"Bruto: {bruto}")
                 bruto=dados["bruto"],
                 regime="eni",
                 coeficiente_atividade=dados.get("coeficiente_atividade", 0.75),
@@ -479,12 +417,12 @@ def api_salario():
             )
         else:
             resultado = calcular_salario(
-            log_security_event("CALCULO_SALARIO", request.remote_addr, f"Bruto: {bruto}")
                 bruto=dados["bruto"],
                 regime="outrem",
                 subsidio_alimentacao=dados.get("subsidio_alimentacao", 6.0),
                 estado_civil=dados.get("estado_civil", "solteiro")
             )
+        log_security_event("API_SALARIO", request.remote_addr, f"Bruto: {dados['bruto']}")
         guardar_historico(tipo="salario", inputs_dict=dados, resultado_dict=resultado)
         return jsonify(resultado)
     except Exception as e:
@@ -504,6 +442,7 @@ def api_credito():
             dados.get("spread", 1.0),
             dados.get("euribor", 3.5)
         )
+        log_security_event("API_CREDITO", request.remote_addr, f"Valor: {dados['valor_imovel']}")
         guardar_historico(tipo="credito", inputs_dict=dados, resultado_dict=resultado)
         return jsonify(resultado)
     except Exception as e:
@@ -526,6 +465,7 @@ def api_rescisao():
             ferias_vencidas=int(dados.get("ferias_vencidas", 0)),
             horas_formacao=int(dados.get("horas_formacao", 0))
         )
+        log_security_event("API_RESCISAO", request.remote_addr, f"Vencimento: {dados['vencimento_base']}")
         guardar_historico(tipo="rescisao", inputs_dict=dados, resultado_dict=resultado)
         return jsonify(resultado)
     except Exception as e:
@@ -543,6 +483,7 @@ def api_subsidio():
             int(dados.get("idade", 30)),
             int(dados.get("meses_desconto", 12))
         )
+        log_security_event("API_SUBSIDIO", request.remote_addr, f"Média: {dados['media_salarial']}")
         guardar_historico(tipo="subsidio", inputs_dict=dados, resultado_dict=resultado)
         return jsonify(resultado)
     except Exception as e:
