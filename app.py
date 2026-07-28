@@ -234,6 +234,7 @@ def salario():
                           isento_ss=isento_ss)
 
 @app.route("/credito", methods=["GET", "POST"])
+@check_ip_block()
 @limiter.limit("5 per minute")
 def credito():
     resultado = None
@@ -291,6 +292,7 @@ def credito():
     return render_template("credito.html", resultado=resultado, tabela=tabela, erro=erro)
 
 @app.route("/rescisao", methods=["GET", "POST"])
+@check_ip_block()
 @limiter.limit("5 per minute")
 def rescisao():
     resultado = None
@@ -377,6 +379,7 @@ def rescisao():
                           horas_formacao=horas_formacao)
 
 @app.route("/subsidio", methods=["GET", "POST"])
+@check_ip_block()
 @limiter.limit("5 per minute")
 def subsidio():
     resultado = None
@@ -453,6 +456,7 @@ def api_salario():
         return jsonify({"erro": str(e)}), 500
 
 @app.route("/api/credito", methods=["POST"])
+@check_ip_block()
 def api_credito():
     try:
         dados = request.get_json()
@@ -473,6 +477,7 @@ def api_credito():
         return jsonify({"erro": str(e)}), 500
 
 @app.route("/api/rescisao", methods=["POST"])
+@check_ip_block()
 def api_rescisao():
     try:
         dados = request.get_json()
@@ -496,6 +501,7 @@ def api_rescisao():
         return jsonify({"erro": str(e)}), 500
 
 @app.route("/api/subsidio", methods=["POST"])
+@check_ip_block()
 def api_subsidio():
     try:
         dados = request.get_json()
