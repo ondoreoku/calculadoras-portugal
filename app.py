@@ -24,6 +24,7 @@ def add_security_headers(response):
     response.headers['Referrer-Policy'] = 'same-origin'
     # CSP relaxado para permitir o Buy Me a Coffee
     response.headers['Content-Security-Policy'] = "default-src 'self' https://*.buymeacoffee.com https://*.buymeacoffee.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.buymeacoffee.com https://www.buymeacoffee.com https://cdn.jsdelivr.net https://*.buymeacoffee.com; style-src 'self' 'unsafe-inline' https://*.buymeacoffee.com; img-src 'self' data: https://*.buymeacoffee.com https://*.buymeacoffee.com; connect-src 'self' https://challenges.cloudflare.com https://api.buymeacoffee.com; frame-src 'self' https://*.buymeacoffee.com; child-src 'self' https://*.buymeacoffee.com; object-src 'none'"
+    response.headers['Permissions-Policy'] = "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
     return response
 
 CORS(app, resources={
