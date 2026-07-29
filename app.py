@@ -22,7 +22,8 @@ def add_security_headers(response):
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['Referrer-Policy'] = 'same-origin'
-    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' https://cdnjs.buymeacoffee.com https://www.buymeacoffee.com https://cdn.jsdelivr.net; style-src 'self'; img-src 'self' data: https://cdn.buymeacoffee.com https://img.buymeacoffee.com; connect-src 'self' https://challenges.cloudflare.com https://api.buymeacoffee.com; frame-src 'self'; object-src 'none'"
+    # CSP relaxado para permitir o Buy Me a Coffee
+    response.headers['Content-Security-Policy'] = "default-src 'self' https://*.buymeacoffee.com https://*.buymeacoffee.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.buymeacoffee.com https://www.buymeacoffee.com https://cdn.jsdelivr.net https://*.buymeacoffee.com; style-src 'self' 'unsafe-inline' https://*.buymeacoffee.com; img-src 'self' data: https://*.buymeacoffee.com https://*.buymeacoffee.com; connect-src 'self' https://challenges.cloudflare.com https://api.buymeacoffee.com; frame-src 'self' https://*.buymeacoffee.com; child-src 'self' https://*.buymeacoffee.com; object-src 'none'"
     return response
 
 CORS(app, resources={
@@ -91,6 +92,10 @@ def guardar_historico(tipo, inputs_dict, resultado_dict):
     ))
     con.commit()
     con.close()
+
+# =============================================================================
+# ROTAS HTML
+# =============================================================================
 
 @app.route("/")
 def home():
@@ -417,6 +422,10 @@ def subsidio():
 
     return render_template("subsidio.html", resultado=resultado, erro=erro)
 
+# =============================================================================
+# ROTAS DA API
+# =============================================================================
+
 @app.route("/api/salario", methods=["POST"])
 @limiter.limit("10 per minute")
 @check_ip_block()
@@ -515,6 +524,9 @@ def api_subsidio():
 def health_check():
     return jsonify({"status": "ok", "message": "API Calculadoras Portugal 2026"})
 
+# =============================================================================
+# TRATAMENTO DE ERROS
+# =============================================================================
 @app.errorhandler(500)
 def internal_error(error):
     return render_template("500.html"), 500
@@ -523,6 +535,9 @@ def internal_error(error):
 def not_found(error):
     return "<h1>404 - Página não encontrada</h1><p><a href='/'>Voltar ao início</a></p>", 404
 
+# =============================================================================
+# INICIALIZAÇÃO DO SERVIDOR
+# =============================================================================
 if __name__ == "__main__":
     print("=" * 60)
     print("  Calculadoras Portugal 2026")
