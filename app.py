@@ -277,3 +277,14 @@ if __name__ == "__main__":
     print("=" * 60)
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
+
+# =============================================================================
+# FUNÇÃO PARA REDIRECT COM TOAST
+# =============================================================================
+def redirect_with_toast(endpoint, message, type='success'):
+    """Redireciona com uma mensagem toast."""
+    from flask import url_for
+    url = url_for(endpoint)
+    from urllib.parse import urlencode, quote
+    params = urlencode({'toast': quote(message), 'toast_type': type})
+    return redirect(f"{url}?{params}")

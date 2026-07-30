@@ -5,17 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Calculadoras Portugal 2026{% endblock %}</title>
     <link rel="stylesheet" href="/static/css/style.css">
-<base target="_self">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <base target="_self">
 </head>
 <body>
     <header>
         <nav>
-            <h1><a href="/">Calculadoras Portugal <span>2026</span></a></h1>
+            <div class="logo">
+                <span class="logo-icon">📊</span>
+                <a href="/">Calculadoras Portugal <span>2026</span></a>
+            </div>
             <ul>
-                <li><a href="/salario">Salário</a></li>
-                <li><a href="/credito">Crédito</a></li>
-                <li><a href="/rescisao">Rescisão</a></li>
-                <li><a href="/subsidio">Desemprego</a></li>
+                <li><a href="/poupanca">💰 Poupança</a></li>
+                <li><a href="/inflacao">📈 Inflação</a></li>
+                <li><a href="/isv">🚗 ISV</a></li>
+                <li><a href="/iuc">🛣️ IUC</a></li>
+                <li><a href="/salario">💵 Salário</a></li>
+                <li><a href="/credito">🏠 Crédito</a></li>
+                <li><a href="/rescisao">📄 Rescisão</a></li>
+                <li><a href="/subsidio">🛡️ Desemprego</a></li>
             </ul>
         </nav>
     </header>
@@ -24,12 +32,67 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer>
+    <footer style="text-align:center;padding:30px 20px;color:var(--gray-400);font-size:0.8rem;border-top:1px solid var(--gray-200);margin-top:40px;">
         <p>© 2026 Calculadoras Portugal 2026</p>
-        <p><a href="https://www.buymeacoffee.com/ondoreoku" target="_blank" style="color: var(--primary); font-weight: 600;">Apoia este projeto</a></p>
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;justify-content:center;gap:12px;">
+            <a href="https://www.buymeacoffee.com/ondoreoku" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#FFDD00;color:#000;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;">☕ Buy Me a Coffee</a>
+            <a href="/historico" style="color:var(--gray-400);">Histórico</a>
+            <a href="/atualizar_noticias" style="color:var(--gray-400);">Atualizar Notícias</a>
+        </div>
     </footer>
 
-    <!-- Buy Me a Coffee Widget -->
-    <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="ondoreoku" data-description="Apoia o desenvolvimento destas calculadoras" data-message="Esta calculadora ajudou-te?" data-color="#059669" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Dark Mode Toggle -->
+    <button onclick="toggleDarkMode()" style="position:fixed;bottom:20px;right:20px;z-index:1000;background:var(--dark-card);color:var(--white);border:2px solid var(--primary);border-radius:50%;width:50px;height:50px;font-size:24px;cursor:pointer;box-shadow:var(--shadow-lg);transition:all var(--transition);">
+        🌓
+    </button>
+
+    <script>
+        // Dark Mode
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+            localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+        }
+        if (localStorage.getItem("darkMode") === "true") {
+            document.body.classList.add("dark-mode");
+        }
+
+        // Toast System
+        function showToast(message, type = 'info', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${message}`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('hide');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // Mostrar toast quando a página carrega
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const msg = urlParams.get('toast');
+            const type = urlParams.get('toast_type') || 'success';
+            if (msg) {
+                showToast(msg, type);
+                // Limpar URL
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+            }
+        });
+    </script>
 </body>
 </html>
