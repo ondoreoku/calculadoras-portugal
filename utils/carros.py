@@ -89,3 +89,37 @@ def calcular_iuc_fallback(co2, ano):
         "fator": fator,
         "nota": "Valor estimado (API externa indisponível)"
     }
+
+def calcular_iuc_fallback(co2, ano):
+    """
+    Calcula IUC com base em valores aproximados (fallback quando API externa falha)
+    """
+    # Valores base aproximados para 2026
+    if co2 <= 100:
+        base = 50
+    elif co2 <= 140:
+        base = 100
+    elif co2 <= 180:
+        base = 150
+    elif co2 <= 250:
+        base = 200
+    else:
+        base = 300
+    
+    # Fator de antiguidade (carros mais antigos pagam menos)
+    idade = 2026 - ano
+    if idade > 10:
+        fator = 0.5
+    elif idade > 5:
+        fator = 0.7
+    else:
+        fator = 1.0
+    
+    return {
+        "iuc": round(base * fator, 2),
+        "co2": co2,
+        "ano": ano,
+        "base": base,
+        "fator": fator,
+        "nota": "Valor estimado (API externa indisponível)"
+    }
