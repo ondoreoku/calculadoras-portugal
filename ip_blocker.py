@@ -41,6 +41,7 @@ def get_rate_limit_for_endpoint(path):
         if path.startswith(endpoint):
             return limit
     return RATE_LIMIT
+
 RATE_WINDOW = 60  # Janela de 60 segundos
 RATE_BLOCK_TIME = 300  # 5 minutos (para rate limiting)
 RATE_BLOCK_ESCALATION = 3600  # 1 hora (se repetir)
@@ -106,8 +107,8 @@ def check_rate_limit(ip):
     ip_request_counts[ip] = [t for t in ip_request_counts[ip] if now - t < RATE_WINDOW]
     
     path = request.path
-        limit = get_rate_limit_for_endpoint(path)
-        if len(ip_request_counts[ip]) >= limit:
+    limit = get_rate_limit_for_endpoint(path)
+    if len(ip_request_counts[ip]) >= limit:
         if ip in ip_blocked:
             duration = RATE_BLOCK_ESCALATION
             reason = f"Demasiados pedidos (reincidente) - {len(ip_request_counts[ip])} em 60s"
