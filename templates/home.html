@@ -99,39 +99,5 @@
                 {% endfor %}
             </div>
         </section>
-
-        <section class="novas-funcionalidades" style="margin-top:60px;padding:40px 20px;background:#f0fdf4;border-radius:12px;border:1px solid #059669;">
-            <h2 style="color:#059669;text-align:center;margin-bottom:30px;">Novas Funcionalidades</h2>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">
-                <div style="background:white;padding:20px;border-radius:8px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-                    <h3 style="font-size:1.1rem;color:#1f2937;">APIs</h3>
-                    <p style="font-size:0.85rem;color:#6b7280;margin:10px 0;">Dados em tempo real</p>
-                    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:5px;">
-                        <a href="/api/ine/inflacao" target="_blank" style="display:inline-block;background:#059669;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Inflação INE</a>
-                        <a href="/api/carros/isv?ano=2020&cilindrada=2000&co2=150" target="_blank" style="display:inline-block;background:#059669;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">ISV</a>
-                        <a href="/api/carros/iuc?ano=2020&co2=150" target="_blank" style="display:inline-block;background:#059669;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">IUC</a>
-                    </div>
-                </div>
-                <div style="background:white;padding:20px;border-radius:8px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-                    <h3 style="font-size:1.1rem;color:#1f2937;">PDFs</h3>
-                    <p style="font-size:0.85rem;color:#6b7280;margin:10px 0;">Resultados em PDF</p>
-                    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:5px;">
-                        <a href="/salario/pdf?salario_bruto=1500&regime=outrem" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Salario</a>
-                        <a href="/credito/pdf?valor_imovel=200000&entrada=40000&prazo_anos=30&spread=1.5&euribor=3.5" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Credito</a>
-                        <a href="/rescisao/pdf?vencimento_base=1200&subsidio_alimentacao=6.0&data_inicio=2020-01-15&data_fim=2026-07-16&motivo=caducidade_termo" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Rescisão</a>
-                        <a href="/subsidio/pdf?media_salarial=1200&idade=30&meses_desconto=12" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Subsidio</a>
-                        <a href="/poupanca/pdf?capital_inicial=1000&contribuicao_mensal=100&taxa_juro=5&periodo=10" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Poupança</a>
-                    </div>
-                </div>
-                <div style="background:white;padding:20px;border-radius:8px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-                    <h3 style="font-size:1.1rem;color:#1f2937;">Estatísticas</h3>
-                    <p style="font-size:0.85rem;color:#6b7280;margin:10px 0;">Dados do sistema</p>
-                    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:5px;">
-                        <a href="/historico" style="display:inline-block;background:#6b7280;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Histórico</a>
-                        <a href="/atualizar_noticias" style="display:inline-block;background:#6b7280;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Atualizar Notícias</a>
-                    </div>
-                </div>
-            </div>
-        </section>
     </div>
 {% endblock %}
