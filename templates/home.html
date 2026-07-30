@@ -2,36 +2,25 @@
 
 {# ========================================================================== #}
 {# BLOCO: title                                                               #}
-{# Substitui o título padrão da base.html para esta página específica.        #}
 {# ========================================================================== #}
 {% block title %}Início — Calculadoras Portugal 2026{% endblock %}
 
 {# ========================================================================== #}
 {# BLOCO: main_class                                                          #}
-{# Adiciona a classe CSS "home" ao elemento <main> para estilos específicos.  #}
 {# ========================================================================== #}
 {% block main_class %}home{% endblock %}
 
 {# ========================================================================== #}
 {# BLOCO: content                                                             #}
-{# Conteúdo principal da página. Inclui:                                      #}
-{#   — Título e subtítulo                                                     #}
-{#   — 4 cards das calculadoras (grid 4 colunas)                              #}
-{#   — Feed de notícias dinâmicas (vindas do SQLite via app.py)                 #}
 {# ========================================================================== #}
 {% block content %}
     <div class="container">
-        {# Título principal da página #}
+        {# Título principal #}
         <h1>Escolhe uma Calculadora</h1>
         <p class="subtitulo">Ferramentas financeiras para Portugal em 2026</p>
 
-        {# ========================================================================== #}
-        {# SECÇÃO: CARDS DAS CALCULADORAS                                           #}
-        {# Grid com 4 colunas (desktop), 2 (tablet), 1 (mobile).                    #}
-        {# Cada card é um link clicável que leva à respetiva calculadora.           #}
-        {# ========================================================================== #}
+        {# CARDS DAS CALCULADORAS #}
         <section class="sugestoes">
-            {# Card 1: Salário Líquido #}
             <a href="/salario" class="card-link">
                 <div class="card">
                     <h2>Salário Líquido</h2>
@@ -39,8 +28,6 @@
                     <span class="card-acao">Calcular &rarr;</span>
                 </div>
             </a>
-
-            {# Card 2: Crédito Habitação #}
             <a href="/credito" class="card-link">
                 <div class="card">
                     <h2>Crédito Habitação</h2>
@@ -48,8 +35,6 @@
                     <span class="card-acao">Calcular &rarr;</span>
                 </div>
             </a>
-
-            {# Card 3: Rescisão #}
             <a href="/rescisao" class="card-link">
                 <div class="card">
                     <h2>Rescisão</h2>
@@ -57,8 +42,6 @@
                     <span class="card-acao">Calcular &rarr;</span>
                 </div>
             </a>
-
-            {# Card 4: Subsídio Desemprego #}
             <a href="/subsidio" class="card-link">
                 <div class="card">
                     <h2>Subsídio Desemprego</h2>
@@ -68,66 +51,31 @@
             </a>
         </section>
 
-        {# ========================================================================== #}
-        {# SECÇÃO: FEED DE NOTÍCIAS                                                 #}
-        {# Recebe a variável 'noticias' passada pelo app.py.                        #}
-        {# Cada notícia tem: titulo, resumo, url, fonte, categoria, data            #}
-        {#                                                                            #}
-        {# ESTRUTURA DO CARD DE NOTÍCIA:                                            #}
-        {#   — Tag de categoria (canto superior)                                      #}
-        {#   — Título da notícia                                                    #}
-        {#   — Resumo (texto breve)                                                 #}
-        {#   — Rodapé: fonte · data · "Ler mais →"                                  #}
-        {#                                                                            #}
-        {# ALINHAMENTO DAS DATAS:                                                   #}
-        {#   O card usa flexbox com flex-direction: column.                           #}
-        {#   O rodapé tem margin-top: auto para ficar sempre no fundo.               #}
-        {#   Isto resolve o problema de alinhamento quando os resumos têm           #}
-        {#   comprimentos diferentes.                                               #}
-        {# ========================================================================== #}
+        {# FEED DE NOTÍCIAS #}
         <section class="noticias">
             <div class="noticias-header">
                 <h2>Notícias Relevantes</h2>
-                {# Link para atualizar notícias manualmente #}
                 <a href="/atualizar_noticias" class="atualizar-link">Atualizar feed</a>
             </div>
-
             <div class="noticias-grid">
-                {# Loop Jinja2: itera sobre a lista de notícias #}
-                {# noticias é passada pelo app.py (get_noticias()) #}
                 {% for noticia in noticias %}
                 <article class="noticia">
-                    {# Tag de categoria (ex: "Economia", "Habitação", "Trabalho") #}
                     <span class="noticia-categoria">{{ noticia.categoria }}</span>
-
-                    {# Título da notícia com link para o artigo original #}
-                    {# target="_blank" abre num novo separador (definido em base.html) #}
                     <h3>
                         <a href="{{ noticia.url }}" class="noticia-titulo-link">
                             {{ noticia.titulo }}
                         </a>
                     </h3>
-
-                    {# Resumo da notícia (já limpo de HTML no noticias.py) #}
                     <p>{{ noticia.resumo }}</p>
-
-                    {# Rodapé do card: alinhado no fundo graças ao flexbox #}
-                    {# margin-top: auto no CSS empurra isto para o fundo #}
                     <div class="noticia-rodape">
                         <span class="noticia-meta">
-                            {# Fonte da notícia (ex: "ECO", "Jornal de Negócios") #}
                             {{ noticia.fonte }}
-                            {# Separador visual · (ponto médio) #}
                             <span class="separador">·</span>
-                            {# Data de publicação (ex: "16 Jul 2026") #}
                             {{ noticia.data }}
                         </span>
-                        {# Link "Ler mais" para o artigo original #}
                         <a href="{{ noticia.url }}" class="ler-mais">Ler mais &rarr;</a>
                     </div>
                 </article>
-
-                {# Se não houver notícias, mostra mensagem #}
                 {% else %}
                 <article class="noticia noticia-vazia">
                     <p>Sem notícias disponíveis de momento. 
@@ -136,37 +84,44 @@
                 {% endfor %}
             </div>
         </section>
-    </div>
-{% endblock %}
 
-        {# ========================================================================== #}
-        {# SECÇÃO: NOVAS FUNCIONALIDADES - APIs e PDFs                               #}
-        {# ========================================================================== #}
+        {# ==================================================================== #}
+        {# NOVAS FUNCIONALIDADES - APIs e PDFs                                  #}
+        {# ==================================================================== #}
         <section class="novas-funcionalidades" style="margin-top:60px;padding:40px 20px;background:#f0fdf4;border-radius:12px;border:1px solid #059669;">
             <h2 style="color:#059669;text-align:center;margin-bottom:30px;">🚀 Novas Funcionalidades</h2>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">
                 
-                <div style="background:white;padding:20px;border-radius:8px;text-align:center;">
+                <div style="background:white;padding:20px;border-radius:8px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
                     <h3 style="font-size:1.1rem;color:#1f2937;">📊 APIs</h3>
                     <p style="font-size:0.85rem;color:#6b7280;margin:10px 0;">Dados em tempo real</p>
-                    <a href="/api/ine/inflacao" target="_blank" style="display:inline-block;background:#059669;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">Inflação INE</a>
-                    <a href="/api/carros/isv?ano=2020&cilindrada=2000&co2=150" target="_blank" style="display:inline-block;background:#059669;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">ISV</a>
-                    <a href="/api/carros/iuc?ano=2020&co2=150" target="_blank" style="display:inline-block;background:#059669;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">IUC</a>
+                    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:5px;">
+                        <a href="/api/ine/inflacao" target="_blank" style="display:inline-block;background:#059669;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Inflação INE</a>
+                        <a href="/api/carros/isv?ano=2020&cilindrada=2000&co2=150" target="_blank" style="display:inline-block;background:#059669;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">ISV</a>
+                        <a href="/api/carros/iuc?ano=2020&co2=150" target="_blank" style="display:inline-block;background:#059669;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">IUC</a>
+                    </div>
                 </div>
                 
-                <div style="background:white;padding:20px;border-radius:8px;text-align:center;">
+                <div style="background:white;padding:20px;border-radius:8px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
                     <h3 style="font-size:1.1rem;color:#1f2937;">📄 PDFs</h3>
                     <p style="font-size:0.85rem;color:#6b7280;margin:10px 0;">Resultados em PDF</p>
-                    <a href="/salario/pdf?salario_bruto=1500" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">Salário</a>
-                    <a href="/credito/pdf?valor_imovel=200000&entrada=40000" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">Crédito</a>
-                    <a href="/rescisao/pdf?vencimento_base=1200" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">Rescisão</a>
-                    <a href="/subsidio/pdf?media_salarial=1200" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">Subsídio</a>
+                    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:5px;">
+                        <a href="/salario/pdf?salario_bruto=1500" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Salário</a>
+                        <a href="/credito/pdf?valor_imovel=200000&entrada=40000" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Crédito</a>
+                        <a href="/rescisao/pdf?vencimento_base=1200" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Rescisão</a>
+                        <a href="/subsidio/pdf?media_salarial=1200" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Subsídio</a>
+                    </div>
                 </div>
                 
-                <div style="background:white;padding:20px;border-radius:8px;text-align:center;">
-                    <h3 style="font-size:1.1rem;color:#1f2937;">🔗 Documentação</h3>
-                    <p style="font-size:0.85rem;color:#6b7280;margin:10px 0;">APIs disponíveis</p>
-                    <a href="#" style="display:inline-block;background:#6b7280;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">Ver todas as APIs</a>
+                <div style="background:white;padding:20px;border-radius:8px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+                    <h3 style="font-size:1.1rem;color:#1f2937;">📊 Estatísticas</h3>
+                    <p style="font-size:0.85rem;color:#6b7280;margin:10px 0;">Dados do sistema</p>
+                    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:5px;">
+                        <a href="/historico" style="display:inline-block;background:#6b7280;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Histórico</a>
+                        <a href="/atualizar_noticias" style="display:inline-block;background:#6b7280;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.8rem;">Atualizar Notícias</a>
+                    </div>
                 </div>
             </div>
         </section>
+    </div>
+{% endblock %}
