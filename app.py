@@ -40,7 +40,7 @@ CORS(app, resources={
 
 from utils.noticias import get_noticias, atualizar_noticias, limpar_cache_antigo
 from utils.ine import get_inflacao
-from utils.carros import calcular_isv, calcular_iuc
+from utils.carros import calcular_isv, calcular_iuc, calcular_iuc_fallback
 from utils.pdf import gerar_pdf_resultado
 from utils.subsidio import calcular_subsidio
 from utils.credito import calcular_credito, calcular_tabela_amortizacao
