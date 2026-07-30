@@ -10,6 +10,11 @@
 
         <section class="form-card">
             <form method="POST" action="/salario">
+            {% if erro %}
+            <div style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                ⚠️ {{ erro }}
+            </div>
+            {% endif %}
                 <div class="input-group full-width" style="margin-bottom: 20px;">
                     <label>Regime de Trabalho</label>
                     <select name="regime" id="regime-select" onchange="toggleRegime()">
@@ -63,6 +68,10 @@
 
                 <button type="submit" class="btn-main">Calcular Salário</button>
             </form>
+            <div style="text-align:center;margin-top:15px;">
+                <a href="/salario/pdf?salario_bruto={{ bruto }}&regime={{ regime }}" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">📄 Baixar PDF</a>
+                <span style="color:#6b7280;font-size:0.8rem;margin-left:10px;">(exemplo com 1500€)</span>
+            </div>
 
             {% if resultado %}
             <div class="resultados visible" style="margin-top: 25px;">

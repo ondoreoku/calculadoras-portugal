@@ -5,70 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Calculadoras Portugal 2026{% endblock %}</title>
     <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
-    <base target="_self">
+<base target="_self">
 </head>
 <body>
     <header>
         <nav>
-            <div class="logo"><span class="logo-icon">📊</span><a href="/">Calculadoras Portugal <span>2026</span></a></div>
+            <h1><a href="/">Calculadoras Portugal <span>2026</span></a></h1>
             <ul>
-                <li><a href="/poupanca">💰 Poupança</a></li>
-                <li><a href="/inflacao">📈 Inflação</a></li>
-                <li><a href="/isv">🚗 ISV</a></li>
-                <li><a href="/iuc">🛣️ IUC</a></li>
-                <li><a href="/salario">💵 Salário</a></li>
-                <li><a href="/credito">🏠 Crédito</a></li>
-                <li><a href="/rescisao">📄 Rescisão</a></li>
-                <li><a href="/subsidio">🛡️ Desemprego</a></li>
+                <li><a href="/poupanca">Poupança</a></li>
+                <li><a href="/inflacao">Inflação</a></li>
+                <li><a href="/isv">ISV</a></li>
+                <li><a href="/iuc">IUC</a></li>
+                <li><a href="/salario">Salário</a></li>
+                <li><a href="/credito">Crédito</a></li>
+                <li><a href="/rescisao">Rescisão</a></li>
+                <li><a href="/subsidio">Desemprego</a></li>
             </ul>
         </nav>
     </header>
+
     <main class="{% block main_class %}{% endblock %}">
         {% block content %}{% endblock %}
     </main>
-    <footer style="text-align:center;padding:30px 20px;color:var(--gray-400);font-size:0.8rem;border-top:1px solid var(--gray-200);margin-top:40px;">
+
+    <footer>
         <p>© 2026 Calculadoras Portugal 2026</p>
-        <div style="margin-top:10px;display:flex;flex-wrap:wrap;justify-content:center;gap:12px;">
-            <a href="https://www.buymeacoffee.com/ondoreoku" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#FFDD00;color:#000;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;">☕ Buy Me a Coffee</a>
-            <a href="/historico" style="color:var(--gray-400);">Histórico</a>
-            <a href="/atualizar_noticias" style="color:var(--gray-400);">Atualizar Notícias</a>
-        </div>
+    <a href="https://www.buymeacoffee.com/ondoreoku" target="_blank" rel="noopener noreferrer" style="display:inline-block; background:#FFDD00; color:#000; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:10px;">☕ Buy Me a Coffee</a>
+        <p><a href="https://www.buymeacoffee.com/ondoreoku" target="_blank" style="color: var(--primary); font-weight: 600;">Apoia este projeto</a></p>
     </footer>
-    <div class="toast-container" id="toastContainer"></div>
-    <button onclick="toggleDarkMode()" style="position:fixed;bottom:20px;right:20px;z-index:1000;background:var(--dark-card);color:var(--white);border:2px solid var(--primary);border-radius:50%;width:50px;height:50px;font-size:24px;cursor:pointer;box-shadow:var(--shadow-lg);transition:all var(--transition);">🌓</button>
-    <script>
-        function toggleDarkMode() {
-            document.body.classList.toggle("dark-mode");
-            localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
-        }
-        if (localStorage.getItem("darkMode") === "true") {
-            document.body.classList.add("dark-mode");
-        }
-        function showToast(message, type, duration) {
-            type = type || 'info';
-            duration = duration || 4000;
-            var container = document.getElementById('toastContainer');
-            var toast = document.createElement('div');
-            toast.className = 'toast ' + type;
-            var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-            toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> ' + message;
-            container.appendChild(toast);
-            setTimeout(function() {
-                toast.classList.add('hide');
-                setTimeout(function() { toast.remove(); }, 300);
-            }, duration);
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            var params = new URLSearchParams(window.location.search);
-            var msg = params.get('toast');
-            var type = params.get('toast_type') || 'success';
-            if (msg) {
-                showToast(decodeURIComponent(msg), type);
-                var newUrl = window.location.pathname;
-                window.history.replaceState({}, document.title, newUrl);
-            }
-        });
-    </script>
+
+    <!-- Buy Me a Coffee Widget -->
+    <button onclick="toggleDarkMode()" style="position:fixed; bottom:20px; right:20px; z-index:1000; background:#2d2d44; color:#fff; border:2px solid #059669; border-radius:50%; width:50px; height:50px; font-size:24px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2);">🌓</button>
+    <script>function toggleDarkMode(){document.body.classList.toggle("dark-mode");localStorage.setItem("darkMode",document.body.classList.contains("dark-mode"));}if(localStorage.getItem("darkMode")==="true"){document.body.classList.add("dark-mode");}</script>
 </body>
 </html>

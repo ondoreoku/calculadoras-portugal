@@ -15,7 +15,7 @@ FEEDS_RSS = [
 
 PALAVRAS_CHAVE = [
     "salario", "salario", "irs", "imposto", "rendimento",
-    "subsidio", "subsidio", "desemprego", "reforma", "pensao", "pensao",
+    "subsídio", "subsídio", "desemprego", "reforma", "pensao", "pensao",
     "seguranca social", "seguranca social", "trabalho", "emprego",
     "euribor", "credito", "credito", "habitacao", "habitacao",
     "hipoteca", "banco", "spread", "juro", "taxa", "financiamento",
@@ -197,44 +197,44 @@ def get_noticias_backup():
             "titulo": "IAS 2026 atualizado",
             "resumo": "O Indexante dos Apoios Sociais mantém-se em 510 euros, afetando cálculos de subsídio e outros apoios sociais em Portugal.",
             "url": "https://www.seg-social.pt",
-            "fonte": "Seguranca Social",
+            "fonte": "Segurança Social",
             "categoria": "Trabalho",
             "data": "15 Jul 2026"
         },
         {
             "titulo": "Novas taxas IRS para 2026",
-            "resumo": "Tabelas de retenção na fonte atualizadas para o segundo semestre de 2026. Consulta as novas taxas aplicáveis ao teu salário.",
+            "resumo": "Tabelas de retenção na fonte atualizadas para o segundo semestre de 2026. Consulta as novas taxas aplicáveis ao teu salario.",
             "url": "https://www.portaldasfinancas.gov.pt",
             "fonte": "Portal das Financas",
             "categoria": "Impostos",
             "data": "10 Jul 2026"
         },
         {
-            "titulo": "Euribor em queda contínua",
+            "titulo": "Euribor em queda continua",
             "resumo": "Taxas de juro para crédito habitação continuam a descer, beneficiando novos contratos e revisões de taxas variáveis.",
             "url": "https://www.bportugal.pt",
             "fonte": "Banco de Portugal",
-            "categoria": "Habitação",
+            "categoria": "Habitacao",
             "data": "05 Jul 2026"
         },
         {
-            "titulo": "Reforma antecipada mantém requisitos",
+            "titulo": "Reforma antecipada mantem requisitos",
             "resumo": "Os critérios para a reforma antecipada não sofrem alterações em 2026. Idade e descontos continuam a ser os fatores determinantes.",
             "url": "https://www.seg-social.pt",
-            "fonte": "Seguranca Social",
+            "fonte": "Segurança Social",
             "categoria": "Reforma",
             "data": "12 Jul 2026"
         },
         {
             "titulo": "Salário mínimo nacional em discussão",
-            "resumo": "Governo e parceiros sociais discutem novo aumento do salário mínimo para o segundo semestre de 2026.",
+            "resumo": "Governo e parceiros sociais discutem novo aumento do salario minimo para o segundo semestre de 2026.",
             "url": "https://www.portugal.gov.pt",
             "fonte": "Governo de Portugal",
             "categoria": "Trabalho",
             "data": "08 Jul 2026"
         },
         {
-            "titulo": "Inflação estabiliza em 2,1%",
+            "titulo": "Inflacao estabiliza em 2,1%",
             "resumo": "Índice de preços no consumidor mantém tendência de desaceleração, com impacto positivo no poder de compra das famílias.",
             "url": "https://www.ine.pt",
             "fonte": "INE",
@@ -242,26 +242,26 @@ def get_noticias_backup():
             "data": "03 Jul 2026"
         },
         {
-            "titulo": "Spread bancário em análise",
-            "resumo": "Banco de Portugal monitoriza margens dos bancos na concessão de crédito habitação. Novas medidas podem ser anunciadas.",
+            "titulo": "Spread bancario em analise",
+            "resumo": "Banco de Portugal monitoriza margens dos bancos na concessao de crédito habitação. Novas medidas podem ser anunciadas.",
             "url": "https://www.bportugal.pt",
             "fonte": "Banco de Portugal",
-            "categoria": "Habitação",
+            "categoria": "Habitacao",
             "data": "01 Jul 2026"
         },
         {
-            "titulo": "Subsídio de férias: regras 2026",
+            "titulo": "Subsidio de férias: regras 2026",
             "resumo": "Trabalhadores independentes podem solicitar subsídio de férias desde que cumpram requisitos de descontos. Saiba como funciona.",
             "url": "https://www.seg-social.pt",
-            "fonte": "Seguranca Social",
+            "fonte": "Segurança Social",
             "categoria": "Trabalho",
             "data": "28 Jun 2026"
         },
         {
-            "titulo": "Descontos para a SS: guia prático",
+            "titulo": "Descontos para a SS: guia pratico",
             "resumo": "Como calcular os descontos para a Segurança Social em 2026. Taxas aplicáveis a trabalhadores por conta de outrem e independentes.",
             "url": "https://www.seg-social.pt",
-            "fonte": "Seguranca Social",
+            "fonte": "Segurança Social",
             "categoria": "Trabalho",
             "data": "25 Jun 2026"
         },

@@ -11,6 +11,11 @@
 
         <section class="form-card">
             <form method="POST" action="/subsidio">
+            {% if erro %}
+            <div style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                ⚠️ {{ erro }}
+            </div>
+            {% endif %}
                 <div class="grid">
                     <div class="input-group full-width">
                         <label>Média dos Salários Brutos (Últimos 12 meses)</label>
@@ -33,6 +38,10 @@
 
                 <button type="submit" class="btn-main">Calcular Apoio</button>
             </form>
+            <div style="text-align:center;margin-top:15px;">
+                <a href="/subsidio/pdf?media_salarial={{ media_salarial }}/subsidio/pdf?media_salarial=1200idade={{ idade }}/subsidio/pdf?media_salarial=1200meses_desconto={{ meses_desconto }}" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">📄 Baixar PDF</a>
+                <span style="color:#6b7280;font-size:0.8rem;margin-left:10px;">(exemplo com 1200€)</span>
+            </div>
 
             {% if resultado %}
             <div class="resultados visible" style="margin-top: 25px;">

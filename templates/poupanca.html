@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Simulador de Poupança 2026{% endblock %}
+{% block main_class %}form-page{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Simulador de Poupança 2026</h1>
+    <p class="subtitulo">Calcula o valor futuro com juros compostos – planeia as tuas finanças</p>
+
+    <section class="form-card">
+        <form method="POST" action="/poupanca">
+            {% if erro %}
+            <div style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                ⚠️ {{ erro }}
+            </div>
+            {% endif %}
+
+            <div class="grid">
+                <div class="input-group">
+                    <label>Valor Inicial (€)</label>
+                    <input type="number" name="capital_inicial" step="0.01" min="0" required value="{{ capital_inicial or 1000 }}" placeholder="Ex: 1000">
+                </div>
+                <div class="input-group">
+                    <label>Contribuição Mensal (€)</label>
+                    <input type="number" name="contribuicao_mensal" step="0.01" min="0" value="{{ contribuicao_mensal or 100 }}" placeholder="Ex: 100">
+                </div>
+                <div class="input-group">
+                    <label>Taxa de Juro Anual (%)</label>
+                    <input type="number" name="taxa_juro" step="0.01" min="0" required value="{{ taxa_juro or 5 }}" placeholder="Ex: 5">
+                </div>
+                <div class="input-group">
+                    <label>Período (anos)</label>
+                    <input type="number" name="periodo" step="1" min="1" required value="{{ periodo or 10 }}" placeholder="Ex: 10">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-main">Simular Poupança</button>
+        </form>
+
+        {% if resultado %}
+        <div class="resultados visible" style="margin-top: 25px;">
+            <div class="grid-res">
+                <div class="res-card">
+                    <small>Valor Futuro</small>
+                    <div class="big-val">€{{ "%.2f"|format(resultado.valor_futuro) }}</div>
+                </div>
+                <div class="res-card">
+                    <small>Total Investido</small>
+                    <div class="big-val" style="color: #3b82f6;">€{{ "%.2f"|format(resultado.total_investido) }}</div>
+                </div>
+            </div>
+            <div class="grid-res" style="margin-top: 15px;">
+                <div class="res-card">
+                    <small>Juros Ganhos</small>
+                    <div class="big-val" style="color: #ea580c;">€{{ "%.2f"|format(resultado.juros_ganhos) }}</div>
+                </div>
+                <div class="res-card">
+                    <small>Rentabilidade</small>
+                    <div class="big-val" style="color: #2563eb;">{{ "%.1f"|format(resultado.rentabilidade) }}%</div>
+                </div>
+            </div>
+
+            <div class="info-extra">
+                <p><strong>Capital Inicial:</strong> €{{ "%.2f"|format(resultado.capital_inicial) }}</p>
+                <p><strong>Contribuição Mensal:</strong> €{{ "%.2f"|format(resultado.contribuicao_mensal) }}</p>
+                <p><strong>Taxa de Juro:</strong> {{ resultado.taxa_juro }}%</p>
+                <p><strong>Período:</strong> {{ resultado.periodo }} anos</p>
+            </div>
+
+            <div style="text-align:center;margin-top:20px;">
+                <a href="/poupanca/pdf?capital_inicial={{ capital_inicial }}&contribuicao_mensal={{ contribuicao_mensal }}&taxa_juro={{ taxa_juro }}&periodo={{ periodo }}" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">📄 Baixar PDF</a>
+            </div>
+
+            <div class="bmc-container" style="text-align: center; margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 10px; border: 1px solid #059669;">
+                <p style="margin: 0 0 10px 0; color: #374151; font-size: 0.95rem;">Esta calculadora foi útil?</p>
+                <a href="https://www.buymeacoffee.com/ondoreoku" target="_blank" style="display: inline-block; background: #059669; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">Paga-me um café</a>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
