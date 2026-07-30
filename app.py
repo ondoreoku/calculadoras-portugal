@@ -640,3 +640,178 @@ if __name__ == "__main__":
     print("=" * 60)
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
+
+@app.route("/api/pdf/test", methods=["GET"])
+def test_pdf():
+    """Rota de teste para verificar se o PDF está a funcionar"""
+    try:
+        # Tentar importar weasyprint
+        import weasyprint
+        version = weasyprint.__version__
+        return jsonify({"status": "ok", "weasyprint_version": version})
+    except ImportError as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# =============================================================================
+# ROTAS PDF PARA TODAS AS CALCULADORAS
+# =============================================================================
+
+@app.route("/salario/pdf", methods=["GET"])
+@limiter.limit("5 per minute")
+def salario_pdf():
+    """Gera PDF com o cálculo do salário"""
+    try:
+        bruto = request.args.get("salario_bruto", type=float)
+        regime = request.args.get("regime", "outrem")
+        
+        if not bruto:
+            return jsonify({"erro": "Parâmetro salario_bruto obrigatório"}), 400
+        
+        if regime == "eni":
+            resultado = calcular_salario(
+                bruto=bruto,
+                regime="eni",
+                coeficiente_atividade=0.75,
+                retencao_irs=0.15,
+                isento_ss="nao"
+            )
+            inputs = {"Salário Bruto": f"€{bruto:.2f}", "Regime": "Trabalhador Independente (ENI)"}
+        else:
+            resultado = calcular_salario(
+                bruto=bruto,
+                regime="outrem",
+                subsidio_alimentacao=6.0,
+                estado_civil="solteiro"
+            )
+            inputs = {"Salário Bruto": f"€{bruto:.2f}", "Regime": "Conta de Outrem"}
+        
+        pdf = gerar_pdf_resultado("Salário Líquido", inputs, resultado)
+        
+        if pdf:
+            response = make_response(pdf)
+            response.headers["Content-Type"] = "application/pdf"
+            response.headers["Content-Disposition"] = f"attachment; filename=salario_{bruto:.0f}.pdf"
+            return response
+        else:
+            return jsonify({"erro": "PDF não disponível", "dados": resultado}), 500
+    except Exception as e:
+        import traceback
+        print(f"[ERRO PDF SALARIO] {traceback.format_exc()}")
+        return jsonify({"erro": str(e)}), 500
+
+
+@app.route("/credito/pdf", methods=["GET"])
+@limiter.limit("5 per minute")
+def credito_pdf():
+    """Gera PDF com o cálculo do crédito habitação"""
+    try:
+        valor_imovel = request.args.get("valor_imovel", type=float)
+        entrada = request.args.get("entrada", type=float, default=0)
+        prazo_anos = request.args.get("prazo_anos", type=int, default=30)
+        spread = request.args.get("spread", type=float, default=1.5)
+        euribor = request.args.get("euribor", type=float, default=3.5)
+        
+        if not valor_imovel:
+            return jsonify({"erro": "Parâmetro valor_imovel obrigatório"}), 400
+        
+        resultado = calcular_credito(valor_imovel, entrada, prazo_anos, spread, euribor)
+        inputs = {
+            "Valor do Imóvel": f"€{valor_imovel:.2f}",
+            "Entrada": f"€{entrada:.2f}",
+            "Prazo": f"{prazo_anos} anos",
+            "Spread": f"{spread}%",
+            "Euribor": f"{euribor}%"
+        }
+        
+        pdf = gerar_pdf_resultado("Crédito Habitação", inputs, resultado)
+        
+        if pdf:
+            response = make_response(pdf)
+            response.headers["Content-Type"] = "application/pdf"
+            response.headers["Content-Disposition"] = f"attachment; filename=credito_{valor_imovel:.0f}.pdf"
+            return response
+        else:
+            return jsonify({"erro": "PDF não disponível", "dados": resultado}), 500
+    except Exception as e:
+        import traceback
+        print(f"[ERRO PDF CREDITO] {traceback.format_exc()}")
+        return jsonify({"erro": str(e)}), 500
+
+
+@app.route("/rescisao/pdf", methods=["GET"])
+@limiter.limit("5 per minute")
+def rescisao_pdf():
+    """Gera PDF com o cálculo da rescisão"""
+    try:
+        vencimento_base = request.args.get("vencimento_base", type=float)
+        subsidio_alimentacao = request.args.get("subsidio_alimentacao", type=float, default=6.0)
+        data_inicio = request.args.get("data_inicio", "2020-01-15")
+        data_fim = request.args.get("data_fim", "2026-07-16")
+        motivo = request.args.get("motivo", "caducidade_termo")
+        
+        if not vencimento_base:
+            return jsonify({"erro": "Parâmetro vencimento_base obrigatório"}), 400
+        
+        resultado = calcular_rescisao(
+            vencimento_base=vencimento_base,
+            subsidio_alimentacao=subsidio_alimentacao,
+            data_inicio=data_inicio,
+            data_fim=data_fim,
+            motivo=motivo
+        )
+        inputs = {
+            "Vencimento Base": f"€{vencimento_base:.2f}",
+            "Subsídio Alimentação": f"€{subsidio_alimentacao:.2f}/dia",
+            "Data Início": data_inicio,
+            "Data Fim": data_fim,
+            "Motivo": motivo
+        }
+        
+        pdf = gerar_pdf_resultado("Rescisão de Contrato", inputs, resultado)
+        
+        if pdf:
+            response = make_response(pdf)
+            response.headers["Content-Type"] = "application/pdf"
+            response.headers["Content-Disposition"] = f"attachment; filename=rescisao_{vencimento_base:.0f}.pdf"
+            return response
+        else:
+            return jsonify({"erro": "PDF não disponível", "dados": resultado}), 500
+    except Exception as e:
+        import traceback
+        print(f"[ERRO PDF RESCISAO] {traceback.format_exc()}")
+        return jsonify({"erro": str(e)}), 500
+
+
+@app.route("/subsidio/pdf", methods=["GET"])
+@limiter.limit("5 per minute")
+def subsidio_pdf():
+    """Gera PDF com o cálculo do subsídio de desemprego"""
+    try:
+        media_salarial = request.args.get("media_salarial", type=float)
+        idade = request.args.get("idade", type=int, default=30)
+        meses_desconto = request.args.get("meses_desconto", type=int, default=12)
+        
+        if not media_salarial:
+            return jsonify({"erro": "Parâmetro media_salarial obrigatório"}), 400
+        
+        resultado = calcular_subsidio(media_salarial, idade, meses_desconto)
+        inputs = {
+            "Média Salarial": f"€{media_salarial:.2f}",
+            "Idade": f"{idade} anos",
+            "Meses de Desconto": f"{meses_desconto} meses"
+        }
+        
+        pdf = gerar_pdf_resultado("Subsídio de Desemprego", inputs, resultado)
+        
+        if pdf:
+            response = make_response(pdf)
+            response.headers["Content-Type"] = "application/pdf"
+            response.headers["Content-Disposition"] = f"attachment; filename=subsidio_{media_salarial:.0f}.pdf"
+            return response
+        else:
+            return jsonify({"erro": "PDF não disponível", "dados": resultado}), 500
+    except Exception as e:
+        import traceback
+        print(f"[ERRO PDF SUBSIDIO] {traceback.format_exc()}")
+        return jsonify({"erro": str(e)}), 500
+
