@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Acesso Bloqueado{% endblock %}
 {% block content %}
-<div style="text-align:center;padding:60px 20px;max-width:600px;margin:0 auto;">
+<div class="bloqueio-container" style="text-align:center;padding:60px 20px;max-width:600px;margin:0 auto;">
     <h1 style="color:#e74c3c;">🚫 Acesso Bloqueado</h1>
-    <p style="font-size:1.2rem;color:#666;margin:20px 0;">O seu IP foi bloqueado por atividade suspeita.</p>
-    <div style="background:#fef2f2;padding:20px;border-radius:10px;border:1px solid #e74c3c;margin:20px 0;">
+    <p style="font-size:1.2rem;margin:20px 0;">O seu acesso foi bloqueado por atividade suspeita.</p>
+    <div class="bloqueio-box" style="background:#fef2f2;padding:20px;border-radius:10px;border:1px solid #e74c3c;margin:20px 0;">
         <p><strong>Motivo:</strong> {{ motivo }}</p>
         <p><strong>Duração:</strong> {{ tempo }}</p>
     </div>

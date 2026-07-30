@@ -23,8 +23,7 @@ def add_security_headers(response):
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['Referrer-Policy'] = 'same-origin'
-    # CSP relaxado para permitir o Buy Me a Coffee
-    response.headers['Content-Security-Policy'] = "default-src 'self' https://*.buymeacoffee.com https://*.buymeacoffee.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.buymeacoffee.com https://www.buymeacoffee.com https://cdn.jsdelivr.net https://*.buymeacoffee.com; style-src 'self' 'unsafe-inline' https://*.buymeacoffee.com; img-src 'self' data: https://*.buymeacoffee.com https://*.buymeacoffee.com; connect-src 'self' https://challenges.cloudflare.com https://api.buymeacoffee.com; frame-src 'self' https://*.buymeacoffee.com; child-src 'self' https://*.buymeacoffee.com; object-src 'none'"
+    response.headers['Content-Security-Policy'] = "default-src 'self' https://*.buymeacoffee.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.buymeacoffee.com https://www.buymeacoffee.com https://cdn.jsdelivr.net https://*.buymeacoffee.com; style-src 'self' 'unsafe-inline' https://*.buymeacoffee.com; img-src 'self' data: https://*.buymeacoffee.com; connect-src 'self' https://challenges.cloudflare.com https://api.buymeacoffee.com; frame-src 'self' https://*.buymeacoffee.com; child-src 'self' https://*.buymeacoffee.com; object-src 'none'"
     response.headers['Permissions-Policy'] = "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
     return response
 
@@ -528,6 +527,97 @@ def api_subsidio():
 @app.route("/api/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "ok", "message": "API Calculadoras Portugal 2026"})
+
+# =============================================================================
+# NOVAS ROTAS DA API - INE E CARROS
+# =============================================================================
+
+@app.route("/api/ine/inflacao", methods=["GET"])
+def api_ine_inflacao():
+    """API para obter a inflação do INE"""
+    try:
+        resultado = get_inflacao()
+        if "erro" in resultado:
+            return jsonify(resultado), 500
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+@app.route("/api/carros/isv", methods=["GET"])
+def api_carros_isv():
+    """API para calcular ISV"""
+    try:
+        co2 = request.args.get('co2', type=float)
+        cilindrada = request.args.get('cilindrada', type=float)
+        ano = request.args.get('ano', type=int)
+        
+        if not all([co2, cilindrada, ano]):
+            return jsonify({"erro": "Parâmetros obrigatórios: co2, cilindrada, ano"}), 400
+        
+        resultado = calcular_isv(co2, cilindrada, ano)
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+@app.route("/api/carros/iuc", methods=["GET"])
+def api_carros_iuc():
+    """API para calcular IUC"""
+    try:
+        co2 = request.args.get('co2', type=float)
+        ano = request.args.get('ano', type=int)
+        
+        if not all([co2, ano]):
+            return jsonify({"erro": "Parâmetros obrigatórios: co2, ano"}), 400
+        
+        resultado = calcular_iuc(co2, ano)
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
+# =============================================================================
+# ROTA PDF
+# =============================================================================
+
+@app.route("/salario/pdf", methods=["GET"])
+@limiter.limit("5 per minute")
+def salario_pdf():
+    """Gera PDF com o cálculo do salário"""
+    try:
+        bruto = request.args.get('salario_bruto', type=float)
+        regime = request.args.get('regime', 'outrem')
+        
+        if not bruto:
+            return jsonify({"erro": "Parâmetro salario_bruto obrigatório"}), 400
+        
+        if regime == "eni":
+            resultado = calcular_salario(
+                bruto=bruto,
+                regime="eni",
+                coeficiente_atividade=0.75,
+                retencao_irs=0.15,
+                isento_ss="nao"
+            )
+        else:
+            resultado = calcular_salario(
+                bruto=bruto,
+                regime="outrem",
+                subsidio_alimentacao=6.0,
+                estado_civil="solteiro"
+            )
+        
+        pdf = gerar_pdf_resultado("Salário Líquido", 
+                                   {"Salário Bruto": f"€{bruto:.2f}", "Regime": regime}, 
+                                   resultado)
+        
+        if pdf:
+            response = make_response(pdf)
+            response.headers['Content-Type'] = 'application/pdf'
+            response.headers['Content-Disposition'] = f'attachment; filename=salario_{bruto:.0f}.pdf'
+            return response
+        else:
+            return jsonify({"erro": "Erro ao gerar PDF"}), 500
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
 
 # =============================================================================
 # TRATAMENTO DE ERROS
