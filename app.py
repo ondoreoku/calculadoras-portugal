@@ -813,3 +813,82 @@ def iuc():
             erro = str(e)
 
     return render_template("iuc.html", resultado=resultado, erro=erro, ano=ano, co2=co2)
+
+# =============================================================================
+# ROTA - SIMULADOR DE POUPANÇA
+# =============================================================================
+from utils.poupanca import calcular_poupanca
+
+@app.route("/poupanca", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
+@check_ip_block()
+def poupanca():
+    erro = None
+    resultado = None
+    capital_inicial = 1000
+    contribuicao_mensal = 100
+    taxa_juro = 5
+    periodo = 10
+
+    if request.method == "POST":
+        try:
+            capital_inicial = float(request.form.get("capital_inicial", 1000))
+            contribuicao_mensal = float(request.form.get("contribuicao_mensal", 0))
+            taxa_juro = float(request.form.get("taxa_juro", 5))
+            periodo = int(request.form.get("periodo", 10))
+
+            if capital_inicial < 0:
+                erro = "Capital inicial deve ser positivo"
+            elif contribuicao_mensal < 0:
+                erro = "Contribuição mensal deve ser positiva"
+            elif taxa_juro < 0:
+                erro = "Taxa de juro deve ser positiva"
+            elif periodo < 1:
+                erro = "Período deve ser pelo menos 1 ano"
+
+            if not erro:
+                resultado = calcular_poupanca(capital_inicial, contribuicao_mensal, taxa_juro, periodo)
+                log_security_event("CALCULO_POUPANCA", request.remote_addr, f"Capital:{capital_inicial} Juro:{taxa_juro} Anos:{periodo}")
+        except ValueError:
+            erro = "Valores inválidos. Por favor, insira números."
+        except Exception as e:
+            erro = str(e)
+
+    return render_template("poupanca.html",
+                          resultado=resultado,
+                          erro=erro,
+                          capital_inicial=capital_inicial,
+                          contribuicao_mensal=contribuicao_mensal,
+                          taxa_juro=taxa_juro,
+                          periodo=periodo)
+
+@app.route("/poupanca/pdf", methods=["GET"])
+@limiter.limit("5 per minute")
+def poupanca_pdf():
+    try:
+        capital_inicial = request.args.get("capital_inicial", type=float)
+        contribuicao_mensal = request.args.get("contribuicao_mensal", type=float, default=0)
+        taxa_juro = request.args.get("taxa_juro", type=float)
+        periodo = request.args.get("periodo", type=int)
+
+        if not capital_inicial or not taxa_juro or not periodo:
+            return jsonify({"erro": "Parâmetros obrigatórios: capital_inicial, taxa_juro, periodo"}), 400
+
+        resultado = calcular_poupanca(capital_inicial, contribuicao_mensal, taxa_juro, periodo)
+        inputs = {
+            "Capital Inicial": f"€{capital_inicial:.2f}",
+            "Contribuição Mensal": f"€{contribuicao_mensal:.2f}",
+            "Taxa de Juro": f"{taxa_juro}%",
+            "Período": f"{periodo} anos"
+        }
+
+        pdf = gerar_pdf_resultado("Poupança", inputs, resultado)
+        if pdf:
+            response = make_response(pdf)
+            response.headers["Content-Type"] = "application/pdf"
+            response.headers["Content-Disposition"] = f"attachment; filename=poupanca_{capital_inicial:.0f}.pdf"
+            return response
+        else:
+            return jsonify({"erro": "PDF não disponível", "dados": resultado}), 500
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
