@@ -31,5 +31,7 @@
     </footer>
 
     <!-- Buy Me a Coffee Widget -->
+    <button onclick="toggleDarkMode()" style="position:fixed; bottom:20px; right:20px; z-index:1000; background:#2d2d44; color:#fff; border:2px solid #059669; border-radius:50%; width:50px; height:50px; font-size:24px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.2);">🌓</button>
+    <script>function toggleDarkMode(){document.body.classList.toggle("dark-mode");localStorage.setItem("darkMode",document.body.classList.contains("dark-mode"));}if(localStorage.getItem("darkMode")==="true"){document.body.classList.add("dark-mode");}</script>
 </body>
 </html>

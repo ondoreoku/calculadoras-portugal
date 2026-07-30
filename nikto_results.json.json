@@ -1,0 +1,68 @@
+[
+   {
+      "end_time" : "2026-07-29 12:17:34 +0100",
+      "host" : "calculadoras-portugal.onrender.com",
+      "ip" : "216.24.57.15",
+      "port" : "443",
+      "server_banner" : null,
+      "ssl_info" : {
+         "altnames" : "onrender.com, *.onrender.com",
+         "ciphers" : "TLS_AES_256_GCM_SHA384",
+         "cn" : "onrender.com",
+         "issuer" : "/C=US/O=Google Trust Services/CN=WE1",
+         "subject" : "/CN=onrender.com"
+      },
+      "start_time" : "2026-07-29 12:16:59 +0100",
+      "vulnerabilities" : [
+         {
+            "id" : 999100,
+            "method" : "GET",
+            "msg" : "Uncommon header(s) 'rndr-id' found, with contents: e4513167-d510-4d8e.",
+            "references" : "",
+            "url" : "/"
+         },
+         {
+            "id" : 999100,
+            "method" : "GET",
+            "msg" : "Uncommon header(s) 'x-render-origin-server' found, with contents: gunicorn.",
+            "references" : "",
+            "url" : "/"
+         },
+         {
+            "id" : "011799",
+            "method" : "GET",
+            "msg" : "An alt-svc header was found which is advertising HTTP/3. The endpoint is: ':443'. Nikto cannot test HTTP/3 over QUIC.",
+            "references" : "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/alt-svc",
+            "url" : "/"
+         },
+         {
+            "id" : 999106,
+            "method" : "GET",
+            "msg" : "Cloudflare detected via cf-ray header. Recommend proxying via Burp or mitmproxy to avoid TLS fingerprint blocks.",
+            "references" : "https://github.com/sullo/nikto/wiki/Using-a-Proxy",
+            "url" : "/"
+         },
+         {
+            "id" : 999966,
+            "method" : "GET",
+            "msg" : "The Content-Encoding header is set to \"deflate\" which may mean that the server is vulnerable to the BREACH attack.",
+            "references" : "http://breachattack.com/",
+            "url" : "/"
+         },
+         {
+            "id" : "013587",
+            "method" : "GET",
+            "msg" : "Suggested security header missing: permissions-policy.",
+            "references" : "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy",
+            "url" : "/"
+         },
+         {
+            "id" : 999992,
+            "method" : "GET",
+            "msg" : "Server is using a wildcard certificate: *.onrender.com.",
+            "references" : "https://en.wikipedia.org/wiki/Wildcard_certificate",
+            "url" : "/"
+         }
+      ]
+   }
+]

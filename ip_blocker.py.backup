@@ -21,26 +21,6 @@ ip_block_reasons = {}  # ip → motivo
 BLOCK_TIME = 7200  # 2 horas (para erros normais)
 ATTACK_BLOCK_TIME = 86400  # 24 horas (para ataques)
 RATE_LIMIT = 10  # Máximo de pedidos por minuto
-
-# =============================================================================
-# RATE LIMITING POR ENDPOINT
-# =============================================================================
-RATE_LIMITS = {
-    "/salario": 10,
-    "/credito": 10,
-    "/rescisao": 10,
-    "/subsidio": 10,
-    "/api/salario": 20,
-    "/api/credito": 20,
-    "/api/rescisao": 20,
-    "/api/subsidio": 20,
-}
-
-def get_rate_limit_for_endpoint(path):
-    for endpoint, limit in RATE_LIMITS.items():
-        if path.startswith(endpoint):
-            return limit
-    return RATE_LIMIT
 RATE_WINDOW = 60  # Janela de 60 segundos
 RATE_BLOCK_TIME = 300  # 5 minutos (para rate limiting)
 RATE_BLOCK_ESCALATION = 3600  # 1 hora (se repetir)
@@ -105,9 +85,7 @@ def check_rate_limit(ip):
     now = time.time()
     ip_request_counts[ip] = [t for t in ip_request_counts[ip] if now - t < RATE_WINDOW]
     
-    path = request.path
-        limit = get_rate_limit_for_endpoint(path)
-        if len(ip_request_counts[ip]) >= limit:
+    if len(ip_request_counts[ip]) >= RATE_LIMIT:
         if ip in ip_blocked:
             duration = RATE_BLOCK_ESCALATION
             reason = f"Demasiados pedidos (reincidente) - {len(ip_request_counts[ip])} em 60s"
