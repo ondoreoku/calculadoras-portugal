@@ -33,7 +33,6 @@
     --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
 }
 
-/* RESET & BASE */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
@@ -49,9 +48,7 @@ body {
 
 a { text-decoration: none; color: inherit; }
 
-/* ============================================================================
-   HEADER
-   ============================================================================ */
+/* HEADER */
 header {
     background: var(--dark);
     padding: 0.8rem 0;
@@ -79,13 +76,8 @@ nav .logo {
     font-size: 1.2rem;
 }
 
-nav .logo span {
-    color: var(--primary-light);
-}
-
-nav .logo-icon {
-    font-size: 1.5rem;
-}
+nav .logo span { color: var(--primary-light); }
+nav .logo-icon { font-size: 1.5rem; }
 
 nav ul {
     list-style: none;
@@ -108,12 +100,8 @@ nav ul li a:hover {
     background: rgba(255,255,255,0.08);
 }
 
-/* ============================================================================
-   MAIN - HOME
-   ============================================================================ */
-main.home {
-    flex: 1;
-}
+/* HERO */
+main.home { flex: 1; }
 
 .hero {
     text-align: center;
@@ -140,9 +128,7 @@ main.home {
     margin: 0 auto;
 }
 
-/* ============================================================================
-   CARDS GRID - 4x2
-   ============================================================================ */
+/* CARDS GRID */
 .cards-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -199,9 +185,7 @@ main.home {
     transition: opacity var(--transition);
 }
 
-.card:hover::before {
-    opacity: 1;
-}
+.card:hover::before { opacity: 1; }
 
 .card:hover {
     transform: translateY(-6px);
@@ -209,15 +193,9 @@ main.home {
     border-color: var(--primary-light);
 }
 
-.card:active {
-    transform: translateY(-3px);
-}
+.card:active { transform: translateY(-3px); }
 
-.card .icon {
-    font-size: 2rem;
-    margin-bottom: 12px;
-    display: inline-block;
-}
+.card .icon { font-size: 2rem; margin-bottom: 12px; display: inline-block; }
 
 .card h2 {
     font-size: 1.05rem;
@@ -245,9 +223,7 @@ main.home {
     transition: gap var(--transition);
 }
 
-.card:hover .action {
-    gap: 12px;
-}
+.card:hover .action { gap: 12px; }
 
 .card .badge {
     position: absolute;
@@ -263,7 +239,6 @@ main.home {
     color: var(--primary);
 }
 
-/* Cores por categoria */
 .card-tax { border-color: #dbeafe; }
 .card-tax .icon { color: #3b82f6; }
 .card-tax .badge { background: #eff6ff; color: #2563eb; }
@@ -284,9 +259,7 @@ main.home {
 .card-econ .icon { color: #6366f1; }
 .card-econ .badge { background: #eef2ff; color: #4f46e5; }
 
-/* ============================================================================
-   NOTÍCIAS
-   ============================================================================ */
+/* NOTÍCIAS */
 .noticias-section {
     max-width: 1200px;
     margin: 0 auto 60px;
@@ -359,9 +332,7 @@ main.home {
     transition: color var(--transition);
 }
 
-.noticia h3 a:hover {
-    color: var(--primary);
-}
+.noticia h3 a:hover { color: var(--primary); }
 
 .noticia p {
     font-size: 0.85rem;
@@ -386,13 +357,9 @@ main.home {
     font-weight: 600;
 }
 
-.noticia .footer a:hover {
-    text-decoration: underline;
-}
+.noticia .footer a:hover { text-decoration: underline; }
 
-/* ============================================================================
-   FORM PAGES
-   ============================================================================ */
+/* FORM PAGES */
 .form-page {
     max-width: 850px;
     margin: 40px auto;
@@ -441,9 +408,7 @@ main.home {
 
 .full-width { grid-column: span 2; }
 
-.input-group {
-    margin-bottom: 4px;
-}
+.input-group { margin-bottom: 4px; }
 
 .input-group label {
     display: block;
@@ -492,9 +457,7 @@ main.home {
     box-shadow: 0 8px 16px rgba(5, 150, 105, 0.25);
 }
 
-.btn-main:active {
-    transform: translateY(0);
-}
+.btn-main:active { transform: translateY(0); }
 
 .btn-pdf {
     display: inline-block;
@@ -514,9 +477,7 @@ main.home {
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-/* ============================================================================
-   RESULTADOS
-   ============================================================================ */
+/* RESULTADOS */
 .resultados {
     display: none;
     margin-top: 24px;
@@ -574,9 +535,7 @@ main.home {
 
 .res-details strong { color: var(--gray-800); }
 
-/* ============================================================================
-   TOAST NOTIFICATIONS
-   ============================================================================ */
+/* TOAST NOTIFICATIONS */
 .toast-container {
     position: fixed;
     bottom: 80px;
@@ -620,9 +579,7 @@ main.home {
     to { opacity: 0; transform: translateX(40px); }
 }
 
-/* ============================================================================
-   RESPONSIVE
-   ============================================================================ */
+/* RESPONSIVE */
 @media (max-width: 1024px) {
     .cards-grid { grid-template-columns: repeat(2, 1fr); }
     .noticias-grid { grid-template-columns: repeat(2, 1fr); }
@@ -658,9 +615,7 @@ main.home {
     .form-page .page-header h1 { font-size: 1.5rem; }
 }
 
-/* ============================================================================
-   DARK MODE
-   ============================================================================ */
+/* DARK MODE */
 .dark-mode {
     background: var(--gray-900);
     color: var(--gray-200);
@@ -703,6 +658,7 @@ main.home {
     border-color: var(--gray-600);
     color: var(--gray-200);
 }
+
 .dark-mode .input-group input:focus,
 .dark-mode .input-group select:focus {
     border-color: var(--primary-light);
@@ -739,21 +695,3 @@ main.home {
 .dark-mode .btn-pdf:hover {
     background: #60a5fa;
 }
-
-.dark-mode .badge-tax { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-.dark-mode .badge-housing { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-.dark-mode .badge-work { background: rgba(16, 185, 129, 0.15); color: var(--primary-light); }
-.dark-mode .badge-car { background: rgba(236, 72, 153, 0.15); color: #f472b6; }
-.dark-mode .badge-econ { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
-
-/* ============================================================================
-   UTILITY
-   ============================================================================ */
-.text-center { text-align: center; }
-.mt-4 { margin-top: 16px; }
-.mb-4 { margin-bottom: 16px; }
-.gap-2 { gap: 8px; }
-.flex { display: flex; }
-.flex-wrap { flex-wrap: wrap; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }

@@ -41,16 +41,13 @@
         </div>
     </footer>
 
-    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Dark Mode Toggle -->
     <button onclick="toggleDarkMode()" style="position:fixed;bottom:20px;right:20px;z-index:1000;background:var(--dark-card);color:var(--white);border:2px solid var(--primary);border-radius:50%;width:50px;height:50px;font-size:24px;cursor:pointer;box-shadow:var(--shadow-lg);transition:all var(--transition);">
         🌓
     </button>
 
     <script>
-        // Dark Mode
         function toggleDarkMode() {
             document.body.classList.toggle("dark-mode");
             localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
@@ -59,37 +56,28 @@
             document.body.classList.add("dark-mode");
         }
 
-        // Toast System
-        function showToast(message, type = 'info', duration = 4000) {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            
-            const icons = {
-                success: '✅',
-                error: '❌',
-                warning: '⚠️',
-                info: 'ℹ️'
-            };
-            
-            toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${message}`;
+        function showToast(message, type, duration) {
+            type = type || 'info';
+            duration = duration || 4000;
+            var container = document.getElementById('toastContainer');
+            var toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> ' + message;
             container.appendChild(toast);
-            
-            setTimeout(() => {
+            setTimeout(function() {
                 toast.classList.add('hide');
-                setTimeout(() => toast.remove(), 300);
+                setTimeout(function() { toast.remove(); }, 300);
             }, duration);
         }
 
-        // Mostrar toast quando a página carrega
         document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const msg = urlParams.get('toast');
-            const type = urlParams.get('toast_type') || 'success';
+            var params = new URLSearchParams(window.location.search);
+            var msg = params.get('toast');
+            var type = params.get('toast_type') || 'success';
             if (msg) {
-                showToast(msg, type);
-                // Limpar URL
-                const newUrl = window.location.pathname;
+                showToast(decodeURIComponent(msg), type);
+                var newUrl = window.location.pathname;
                 window.history.replaceState({}, document.title, newUrl);
             }
         });
