@@ -3,7 +3,19 @@ services:
     name: calculadoras-portugal-2026
     runtime: python
     plan: free
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: |
+      apt-get update && apt-get install -y \
+        build-essential \
+        python3-dev \
+        libpango1.0-dev \
+        libpangoft2-1.0-0 \
+        libharfbuzz-dev \
+        libfreetype-dev \
+        libffi-dev \
+        libjpeg-dev \
+        libopenjp2-7 \
+        libtiff-dev \
+        && pip install -r requirements.txt
     startCommand: "gunicorn app:app"
     envVars:
       - key: PYTHON_VERSION

@@ -861,3 +861,26 @@ footer a:hover {
 .dark-mode .bloqueio-box p {
     color: #c8c8d8 !important;
 }
+
+/* DARK MODE - PÁGINA DE BLOQUEIO */
+.dark-mode .bloqueio-container h1 {
+    color: #f87171 !important;
+}
+
+.dark-mode .bloqueio-container p {
+    color: #c8c8d8 !important;
+}
+
+.dark-mode .bloqueio-box {
+    background-color: #2d2d44 !important;
+    border-color: #4a4a6a !important;
+    color: #e8e8e8 !important;
+}
+
+.dark-mode .bloqueio-box strong {
+    color: #e8e8e8 !important;
+}
+
+.dark-mode .bloqueio-box p {
+    color: #c8c8d8 !important;
+}

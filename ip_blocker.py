@@ -22,9 +22,7 @@ BLOCK_TIME = 7200  # 2 horas (para erros normais)
 ATTACK_BLOCK_TIME = 86400  # 24 horas (para ataques)
 RATE_LIMIT = 10  # Máximo de pedidos por minuto
 
-# =============================================================================
 # RATE LIMITING POR ENDPOINT
-# =============================================================================
 RATE_LIMITS = {
     "/salario": 10,
     "/credito": 10,
@@ -42,9 +40,9 @@ def get_rate_limit_for_endpoint(path):
             return limit
     return RATE_LIMIT
 
-RATE_WINDOW = 60  # Janela de 60 segundos
-RATE_BLOCK_TIME = 300  # 5 minutos (para rate limiting)
-RATE_BLOCK_ESCALATION = 3600  # 1 hora (se repetir)
+RATE_WINDOW = 60
+RATE_BLOCK_TIME = 300
+RATE_BLOCK_ESCALATION = 3600
 
 # Padrões de ATAQUE
 ATTACK_PATTERNS = [
@@ -75,7 +73,6 @@ def is_attack_payload(data):
     return False
 
 def is_blocked(user_id, ip):
-    # Verificar bloqueio por rate limiting (IP)
     if ip in ip_blocked:
         if time.time() < ip_blocked[ip]:
             return True, ip_block_reasons.get(ip, "Demasiados pedidos")
@@ -84,7 +81,6 @@ def is_blocked(user_id, ip):
             if ip in ip_block_reasons:
                 del ip_block_reasons[ip]
     
-    # Verificar bloqueio por utilizador (cookie)
     if user_id in blocked_users:
         if time.time() < blocked_users[user_id]:
             return True, blocked_reasons.get(user_id, "Atividade suspeita")
@@ -133,7 +129,6 @@ def check_ip_block():
                 user_id = get_user_id()
                 ip = get_client_ip()
                 
-                # Rate Limiting por IP
                 rate_limited, rate_reason, rate_duration = check_rate_limit(ip)
                 if rate_limited:
                     minutes = rate_duration // 60
@@ -143,10 +138,8 @@ def check_ip_block():
                                         tempo=f"{minutes} minutos"), 429)
                     return response
                 
-                # Verificar bloqueio por utilizador (cookie)
                 is_blocked_flag, reason = is_blocked(user_id, ip)
                 if is_blocked_flag:
-                    # Verificar se o user_id está em blocked_users antes de aceder
                     if user_id in blocked_users:
                         minutes = int((blocked_users[user_id] - time.time()) // 60)
                         tempo = f"{minutes} minutos"
@@ -160,7 +153,6 @@ def check_ip_block():
                     response.set_cookie('user_id', user_id, max_age=365*24*60*60, httponly=True, secure=True, samesite='Lax')
                     return response
                 
-                # Verificar se o pedido atual é um ataque
                 form_data = list(request.form.values())
                 all_data = " ".join(form_data)
                 
