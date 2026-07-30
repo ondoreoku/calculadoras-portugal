@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{# ========================================================================== #}
+{# BLOCO: title                                                               #}
+{# ========================================================================== #}
+{% block title %}Histórico — Calculadoras Portugal 2026{% endblock %}
+
+{# ========================================================================== #}
+{# BLOCO: main_class                                                          #}
+{# ========================================================================== #}
+{% block main_class %}form-page{% endblock %}
+
+{# ========================================================================== #}
+{# BLOCO: content                                                             #}
+{# Mostra uma tabela com todos os cálculos efetuados.                         #}
+{# Cada linha mostra: tipo, inputs, resultados, data.                        #}
+{# ========================================================================== #}
+{% block content %}
+    <div class="container">
+        <h1>Histórico de Cálculos</h1>
+        <p class="subtitulo">Registo de todos os cálculos efetuados no site</p>
+
+        <section class="form-card">
+            {% if registos %}
+            <div class="historico-tabela-wrapper">
+                <table class="historico-tabela">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Calculadora</th>
+                            <th>Inputs</th>
+                            <th>Resultado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for registo in registos %}
+                        <tr>
+                            {# Data e hora do cálculo #}
+                            <td class="col-data">{{ registo.data_hora }}</td>
+
+                            {# Nome da calculadora (legível) #}
+                            <td class="col-tipo">
+                                <span class="badge-tipo badge-{{ registo.tipo_raw }}">
+                                    {{ registo.tipo }}
+                                </span>
+                            </td>
+
+                            {# Inputs: mostra os valores de entrada #}
+                            <td class="col-inputs">
+                                {% for chave, valor in registo.inputs.items() %}
+                                    <span class="input-item">
+                                        <strong>{{ chave }}:</strong> {{ valor }}
+                                    </span>
+                                    {% if not loop.last %}<br>{% endif %}
+                                {% endfor %}
+                            </td>
+
+                            {# Resultado: mostra os valores calculados #}
+                            <td class="col-resultado">
+                                {% for chave, valor in registo.resultado.items() %}
+                                    <span class="resultado-item">
+                                        <strong>{{ chave }}:</strong> {{ valor }}
+                                    </span>
+                                    {% if not loop.last %}<br>{% endif %}
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="sem-registos">Ainda não efetuaste nenhum cálculo. 
+            <a href="/subsidio">Experimenta o simulador de subsídio</a>.</p>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}
