@@ -89,3 +89,4 @@ calculadoras-portugal/
 ## Licença
 
 Projeto de aprendizagem — uso livre.
+# Trigger deploy
