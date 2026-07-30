@@ -719,3 +719,97 @@ if __name__ == "__main__":
     print("=" * 60)
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
+
+# =============================================================================
+# ROTAS PARA AS NOVAS CALCULADORAS
+# =============================================================================
+
+@app.route("/inflacao", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
+@check_ip_block()
+def inflacao():
+    erro = None
+    resultado = None
+
+    if request.method == "POST":
+        try:
+            # Usar a função get_inflacao() do utils.ine
+            from utils.ine import get_inflacao
+            resultado = get_inflacao()
+            if "erro" in resultado:
+                erro = resultado["erro"]
+                resultado = None
+            log_security_event("CALCULO_INFLACAO", request.remote_addr, "Consulta inflação")
+        except Exception as e:
+            erro = str(e)
+
+    # Se for GET, mostrar apenas a página sem resultados
+    return render_template("inflacao.html", resultado=resultado, erro=erro)
+
+@app.route("/isv", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
+@check_ip_block()
+def isv():
+    erro = None
+    resultado = None
+    ano = 2020
+    cilindrada = 2000
+    co2 = 150
+
+    if request.method == "POST":
+        try:
+            ano = int(request.form.get("ano", 2020))
+            cilindrada = float(request.form.get("cilindrada", 2000))
+            co2 = float(request.form.get("co2", 150))
+
+            # Validar valores
+            if ano < 1990 or ano > 2026:
+                erro = "Ano deve estar entre 1990 e 2026"
+            elif cilindrada <= 0:
+                erro = "Cilindrada deve ser positiva"
+            elif co2 < 0:
+                erro = "CO₂ deve ser positivo"
+
+            if not erro:
+                from utils.carros import calcular_isv
+                resultado = calcular_isv(co2, cilindrada, ano)
+                log_security_event("CALCULO_ISV", request.remote_addr, f"Ano:{ano} CC:{cilindrada} CO2:{co2}")
+        except ValueError:
+            erro = "Valores inválidos. Por favor, insira números."
+        except Exception as e:
+            erro = str(e)
+
+    return render_template("isv.html", resultado=resultado, erro=erro, ano=ano, cilindrada=cilindrada, co2=co2)
+
+@app.route("/iuc", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
+@check_ip_block()
+def iuc():
+    erro = None
+    resultado = None
+    ano = 2020
+    co2 = 150
+
+    if request.method == "POST":
+        try:
+            ano = int(request.form.get("ano", 2020))
+            co2 = float(request.form.get("co2", 150))
+
+            if ano < 1990 or ano > 2026:
+                erro = "Ano deve estar entre 1990 e 2026"
+            elif co2 < 0:
+                erro = "CO₂ deve ser positivo"
+
+            if not erro:
+                from utils.carros import calcular_iuc, calcular_iuc_fallback
+                resultado = calcular_iuc(co2, ano)
+                if "erro" in resultado:
+                    resultado = calcular_iuc_fallback(co2, ano)
+                    resultado["nota"] = resultado.get("nota", "Valor estimado (API externa indisponível)")
+                log_security_event("CALCULO_IUC", request.remote_addr, f"Ano:{ano} CO2:{co2}")
+        except ValueError:
+            erro = "Valores inválidos. Por favor, insira números."
+        except Exception as e:
+            erro = str(e)
+
+    return render_template("iuc.html", resultado=resultado, erro=erro, ano=ano, co2=co2)
