@@ -138,3 +138,35 @@
         </section>
     </div>
 {% endblock %}
+
+        {# ========================================================================== #}
+        {# SECÇÃO: NOVAS FUNCIONALIDADES - APIs e PDFs                               #}
+        {# ========================================================================== #}
+        <section class="novas-funcionalidades" style="margin-top:60px;padding:40px 20px;background:#f0fdf4;border-radius:12px;border:1px solid #059669;">
+            <h2 style="color:#059669;text-align:center;margin-bottom:30px;">🚀 Novas Funcionalidades</h2>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;">
+                
+                <div style="background:white;padding:20px;border-radius:8px;text-align:center;">
+                    <h3 style="font-size:1.1rem;color:#1f2937;">📊 APIs</h3>
+                    <p style="font-size:0.85rem;color:#6b7280;margin:10px 0;">Dados em tempo real</p>
+                    <a href="/api/ine/inflacao" target="_blank" style="display:inline-block;background:#059669;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">Inflação INE</a>
+                    <a href="/api/carros/isv?ano=2020&cilindrada=2000&co2=150" target="_blank" style="display:inline-block;background:#059669;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">ISV</a>
+                    <a href="/api/carros/iuc?ano=2020&co2=150" target="_blank" style="display:inline-block;background:#059669;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">IUC</a>
+                </div>
+                
+                <div style="background:white;padding:20px;border-radius:8px;text-align:center;">
+                    <h3 style="font-size:1.1rem;color:#1f2937;">📄 PDFs</h3>
+                    <p style="font-size:0.85rem;color:#6b7280;margin:10px 0;">Resultados em PDF</p>
+                    <a href="/salario/pdf?salario_bruto=1500" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">Salário</a>
+                    <a href="/credito/pdf?valor_imovel=200000&entrada=40000" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">Crédito</a>
+                    <a href="/rescisao/pdf?vencimento_base=1200" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">Rescisão</a>
+                    <a href="/subsidio/pdf?media_salarial=1200" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">Subsídio</a>
+                </div>
+                
+                <div style="background:white;padding:20px;border-radius:8px;text-align:center;">
+                    <h3 style="font-size:1.1rem;color:#1f2937;">🔗 Documentação</h3>
+                    <p style="font-size:0.85rem;color:#6b7280;margin:10px 0;">APIs disponíveis</p>
+                    <a href="#" style="display:inline-block;background:#6b7280;color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;font-size:0.85rem;margin:5px;">Ver todas as APIs</a>
+                </div>
+            </div>
+        </section>
