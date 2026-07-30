@@ -125,10 +125,25 @@ def check_ip_block():
         from functools import wraps
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if request.method == 'POST':
+            if request.method == "POST":
                 user_id = get_user_id()
                 ip = get_client_ip()
                 
+                # PRIMEIRO: Verificar se o pedido é um ataque
+                form_data = list(request.form.values())
+                all_data = " ".join(form_data)
+                
+                if is_attack_payload(all_data):
+                    logger.info(f"[BLOQUEIO] ATAQUE DETETADO! Bloqueando utilizador {user_id[:8]}")
+                    block_user(user_id, f"🚫 ATAQUE DETETADO: {all_data[:50]}...", ATTACK_BLOCK_TIME)
+                    response = make_response(render_template("bloqueado.html", 
+                                        user_id=user_id[:8],
+                                        motivo="Tentativa de ataque detetada", 
+                                        tempo="24 horas"), 403)
+                    response.set_cookie("user_id", user_id, max_age=365*24*60*60, httponly=True, secure=True, samesite="Lax")
+                    return response
+                
+                # SEGUNDO: Rate Limiting por IP
                 rate_limited, rate_reason, rate_duration = check_rate_limit(ip)
                 if rate_limited:
                     minutes = rate_duration // 60
@@ -138,6 +153,7 @@ def check_ip_block():
                                         tempo=f"{minutes} minutos"), 429)
                     return response
                 
+                # TERCEIRO: Verificar bloqueio por utilizador (cookie)
                 is_blocked_flag, reason = is_blocked(user_id, ip)
                 if is_blocked_flag:
                     if user_id in blocked_users:
@@ -150,21 +166,7 @@ def check_ip_block():
                                         user_id=user_id[:8],
                                         motivo=reason, 
                                         tempo=tempo), 403)
-                    response.set_cookie('user_id', user_id, max_age=365*24*60*60, httponly=True, secure=True, samesite='Lax')
-                    return response
-                
-                form_data = list(request.form.values())
-                all_data = " ".join(form_data)
-                
-                if is_attack_payload(all_data):
-                    logger.info(f"[BLOQUEIO] ATAQUE DETETADO! Bloqueando utilizador {user_id[:8]}")
-                    block_user(user_id, f"🚫 ATAQUE DETETADO: {all_data[:50]}...", ATTACK_BLOCK_TIME)
-                    
-                    response = make_response(render_template("bloqueado.html", 
-                                        user_id=user_id[:8],
-                                        motivo="Tentativa de ataque detetada", 
-                                        tempo="24 horas"), 403)
-                    response.set_cookie('user_id', user_id, max_age=365*24*60*60, httponly=True, secure=True, samesite='Lax')
+                    response.set_cookie("user_id", user_id, max_age=365*24*60*60, httponly=True, secure=True, samesite="Lax")
                     return response
                 
                 return f(*args, **kwargs)

@@ -559,6 +559,7 @@ def api_carros_isv():
 
 @app.route("/api/carros/iuc", methods=["GET"])
 @app.route("/api/carros/iuc", methods=["GET"])
+@app.route("/api/carros/iuc", methods=["GET"])
 def api_carros_iuc():
     try:
         co2 = request.args.get("co2", type=float)
@@ -566,6 +567,13 @@ def api_carros_iuc():
         
         if not all([co2, ano]):
             return jsonify({"erro": "Parâmetros obrigatórios: co2, ano"}), 400
+        
+        resultado = calcular_iuc(co2, ano)
+        if resultado and "erro" in resultado:
+            resultado = calcular_iuc_fallback(co2, ano)
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
         
         resultado = calcular_iuc(co2, ano)
         if "erro" in resultado:
