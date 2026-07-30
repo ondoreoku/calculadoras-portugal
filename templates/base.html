@@ -11,10 +11,7 @@
 <body>
     <header>
         <nav>
-            <div class="logo">
-                <span class="logo-icon">📊</span>
-                <a href="/">Calculadoras Portugal <span>2026</span></a>
-            </div>
+            <div class="logo"><span class="logo-icon">📊</span><a href="/">Calculadoras Portugal <span>2026</span></a></div>
             <ul>
                 <li><a href="/poupanca">💰 Poupança</a></li>
                 <li><a href="/inflacao">📈 Inflação</a></li>
@@ -27,11 +24,9 @@
             </ul>
         </nav>
     </header>
-
     <main class="{% block main_class %}{% endblock %}">
         {% block content %}{% endblock %}
     </main>
-
     <footer style="text-align:center;padding:30px 20px;color:var(--gray-400);font-size:0.8rem;border-top:1px solid var(--gray-200);margin-top:40px;">
         <p>© 2026 Calculadoras Portugal 2026</p>
         <div style="margin-top:10px;display:flex;flex-wrap:wrap;justify-content:center;gap:12px;">
@@ -40,13 +35,8 @@
             <a href="/atualizar_noticias" style="color:var(--gray-400);">Atualizar Notícias</a>
         </div>
     </footer>
-
     <div class="toast-container" id="toastContainer"></div>
-
-    <button onclick="toggleDarkMode()" style="position:fixed;bottom:20px;right:20px;z-index:1000;background:var(--dark-card);color:var(--white);border:2px solid var(--primary);border-radius:50%;width:50px;height:50px;font-size:24px;cursor:pointer;box-shadow:var(--shadow-lg);transition:all var(--transition);">
-        🌓
-    </button>
-
+    <button onclick="toggleDarkMode()" style="position:fixed;bottom:20px;right:20px;z-index:1000;background:var(--dark-card);color:var(--white);border:2px solid var(--primary);border-radius:50%;width:50px;height:50px;font-size:24px;cursor:pointer;box-shadow:var(--shadow-lg);transition:all var(--transition);">🌓</button>
     <script>
         function toggleDarkMode() {
             document.body.classList.toggle("dark-mode");
@@ -55,7 +45,6 @@
         if (localStorage.getItem("darkMode") === "true") {
             document.body.classList.add("dark-mode");
         }
-
         function showToast(message, type, duration) {
             type = type || 'info';
             duration = duration || 4000;
@@ -70,7 +59,6 @@
                 setTimeout(function() { toast.remove(); }, 300);
             }, duration);
         }
-
         document.addEventListener('DOMContentLoaded', function() {
             var params = new URLSearchParams(window.location.search);
             var msg = params.get('toast');
