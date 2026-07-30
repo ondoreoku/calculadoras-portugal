@@ -1,78 +1,144 @@
-from jinja2 import Template
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+from reportlab.lib.units import cm
 from datetime import datetime
+import io
 import logging
 
 logger = logging.getLogger(__name__)
 
 def gerar_pdf_resultado(tipo, inputs, resultado):
     """
-    Gera um PDF simplificado (HTML formatado como PDF)
+    Gera PDF usando reportlab
     """
     try:
-        # Gerar HTML para PDF
-        html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>Calculadora {tipo}</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 40px; background: #f9fafb; }}
-                .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; }}
-                h1 {{ color: #059669; border-bottom: 3px solid #059669; padding-bottom: 10px; }}
-                .resultado {{ background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #059669; }}
-                .label {{ font-weight: 600; color: #374151; }}
-                .valor {{ color: #059669; font-weight: 700; }}
-                .footer {{ margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; text-align: center; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>📊 Calculadora de {tipo}</h1>
-                <p><strong>Data:</strong> {datetime.now().strftime("%d/%m/%Y às %H:%M")}</p>
-                <div class="resultado">
-                    <h2 style="font-size:18px; margin-top:0;">📈 Resultado</h2>
-        """
+        # Criar buffer para o PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, 
+                               rightMargin=2*cm, leftMargin=2*cm,
+                               topMargin=2*cm, bottomMargin=2*cm)
         
+        styles = getSampleStyleSheet()
+        
+        # Estilo personalizado
+        titulo_style = ParagraphStyle(
+            'Titulo',
+            parent=styles['Heading1'],
+            fontSize=18,
+            textColor=colors.HexColor('#059669'),
+            spaceAfter=12,
+            alignment=1  # Centro
+        )
+        
+        subtitulo_style = ParagraphStyle(
+            'Subtitulo',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#059669'),
+            spaceAfter=10
+        )
+        
+        normal_style = ParagraphStyle(
+            'Normal',
+            parent=styles['Normal'],
+            fontSize=11,
+            spaceAfter=6
+        )
+        
+        valor_style = ParagraphStyle(
+            'Valor',
+            parent=styles['Normal'],
+            fontSize=11,
+            textColor=colors.HexColor('#059669'),
+            fontWeight='bold'
+        )
+        
+        # Construir o documento
+        story = []
+        
+        # Título
+        story.append(Paragraph(f"📊 Calculadora de {tipo}", titulo_style))
+        story.append(Spacer(1, 0.5*cm))
+        
+        # Data
+        story.append(Paragraph(f"<b>Data:</b> {datetime.now().strftime('%d/%m/%Y às %H:%M')}", normal_style))
+        story.append(Spacer(1, 0.5*cm))
+        
+        # Resultados
+        story.append(Paragraph("📈 Resultado", subtitulo_style))
+        
+        # Tabela de resultados
+        data = []
         for key, value in resultado.items():
-            html += f'<p><span class="label">{key}:</span> <span class="valor">{value}</span></p>'
+            data.append([Paragraph(key, normal_style), Paragraph(str(value), valor_style)])
         
-        html += """
-                </div>
-                <div class="dados" style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <h3 style="font-size:16px; margin-top:0;">📋 Dados de Entrada</h3>
-        """
+        if data:
+            table = Table(data, colWidths=[4*cm, 4*cm])
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f0fdf4')),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#059669')),
+                ('BOX', (0, 0), (-1, -1), 2, colors.HexColor('#059669')),
+            ]))
+            story.append(table)
         
+        story.append(Spacer(1, 0.5*cm))
+        
+        # Dados de entrada
+        story.append(Paragraph("📋 Dados de Entrada", subtitulo_style))
+        
+        data_inputs = []
         for key, value in inputs.items():
-            html += f'<p><span class="label">{key}:</span> {value}</p>'
+            data_inputs.append([Paragraph(key, normal_style), Paragraph(str(value), normal_style)])
         
-        html += f"""
-                </div>
-                <div class="footer">
-                    <p>Calculadoras Portugal 2026</p>
-                    <p>https://calculadoras-portugal.onrender.com</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
+        if data_inputs:
+            table_inputs = Table(data_inputs, colWidths=[4*cm, 4*cm])
+            table_inputs.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f9fafb')),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ]))
+            story.append(table_inputs)
         
-        # Tentar usar weasyprint se estiver disponível
-        try:
-            from weasyprint import HTML
-            pdf = HTML(string=html).write_pdf()
-            if pdf and len(pdf) > 100:
-                logger.info(f"[PDF] PDF gerado com weasyprint ({len(pdf)} bytes)")
-                return pdf
-        except Exception as e:
-            logger.warning(f"[PDF] weasyprint falhou: {e}")
+        story.append(Spacer(1, 1*cm))
         
-        # Fallback: retornar HTML como texto (será salvo como .html)
-        logger.info("[PDF] Usando fallback HTML")
-        return html.encode('utf-8')
+        # Rodapé
+        footer_style = ParagraphStyle(
+            'Footer',
+            parent=styles['Normal'],
+            fontSize=9,
+            textColor=colors.HexColor('#6b7280'),
+            alignment=1
+        )
+        story.append(Paragraph("Calculadoras Portugal 2026", footer_style))
+        story.append(Paragraph("https://calculadoras-portugal.onrender.com", footer_style))
         
+        # Gerar PDF
+        doc.build(story)
+        
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+        
+        if pdf_bytes and len(pdf_bytes) > 100:
+            logger.info(f"[PDF] PDF gerado com reportlab ({len(pdf_bytes)} bytes)")
+            return pdf_bytes
+        else:
+            logger.error(f"[PDF] PDF gerado tem apenas {len(pdf_bytes) if pdf_bytes else 0} bytes")
+            return None
+            
     except Exception as e:
-        logger.error(f"[PDF] Falha ao gerar: {str(e)}")
+        logger.error(f"[PDF] Falha ao gerar PDF: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
         return None

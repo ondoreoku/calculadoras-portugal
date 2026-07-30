@@ -5,3 +5,4 @@ feedparser==6.0.11
 Flask-Limiter==3.5.0
 weasyprint==61.2
 requests==2.31.0
+reportlab==4.2.5
