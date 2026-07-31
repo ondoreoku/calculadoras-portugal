@@ -1,313 +1,94 @@
-# 🔐 Calculadoras Portugal 2026 — Branch CYBERSEC
+# 🧼 Calculadoras Portugal 2026 — Branch CLEAN CODE
 
-**Branch de segurança e funcionalidades avançadas** do projeto Calculadoras Portugal 2026.
+**Branch dedicada à refatoração estrutural, eliminação de redundâncias e higienização profunda do repositório.**
 
-> 🌐 **Site em produção:** [https://calculadoras-portugal.onrender.com](https://calculadoras-portugal.onrender.com)
-
----
-
-## 📌 ÍNDICE
-
-- [Sobre o Branch](#sobre-o-branch)
-- [Calculadoras Disponíveis](#calculadoras-disponíveis)
-- [Funcionalidades de Segurança](#funcionalidades-de-segurança)
-- [APIs Disponíveis](#apis-disponíveis)
-- [Tecnologias Utilizadas](#tecnologias-utilizadas)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Como Executar Localmente](#como-executar-localmente)
-- [Deploy no Render](#deploy-no-render)
-- [Testes Automatizados](#testes-automatizados)
+> 🌐 **Produção:** [https://calculadoras-portugal.onrender.com](https://calculadoras-portugal.onrender.com)
 
 ---
 
-## 📖 Sobre o Branch
+## 📌 Histórico e Contexto
 
-O branch **CYBERSEC** é uma evolução do projeto base com foco em:
+O desenvolvimento deste ecossistema passou por várias fases críticas de iteração rápida e auditoria agressiva de segurança (refletidas nas branches anteriores *Getting pissed* e *Cybersec*). Embora essas etapas tenham sido fundamentais para blindar a aplicação contra vulnerabilidades e garantir a estabilidade inicial, elas introduziram ruído, ficheiros temporários e código redundante.
 
-- 🛡️ **Segurança avançada** — proteção contra ataques XSS, SQL Injection, brute force, rate limiting e headers de segurança.
-- 📄 **Geração de PDFs** — resultados em PDF para todas as calculadoras.
-- 🔌 **APIs REST** — integração com dados reais (INE, Carros).
-- 🎨 **UI/UX melhorada** — Dark Mode, design responsivo, novas calculadoras.
-- 🤖 **CI/CD** — GitHub Actions com análise de segurança automática.
+A branch **Clean Code** nasce com o propósito de "despaghettificar" a base de código, consolidar a arquitetura modular e remover definitivamente todo o lixo computacional que não deve pertencer ao controlo de versões.
 
 ---
 
-## 🧮 Calculadoras Disponíveis (8)
+## 🎯 Objetivos Específicos de Refatoração
 
-| # | Calculadora | Descrição | PDF | API |
-|---|-------------|-----------|-----|-----|
-| 1 | **Salário Líquido** | Conta de Outrem + ENI (IRS, Segurança Social) | ✅ | ✅ |
-| 2 | **Crédito Habitação** | Sistema Price com tabela de amortização | ✅ | ✅ |
-| 3 | **Rescisão de Contrato** | Cálculo de indemnização (vários motivos) | ✅ | ✅ |
-| 4 | **Subsídio de Desemprego** | Com limites IAS 2026 | ✅ | ✅ |
-| 5 | **Inflação (INE)** | Taxa de inflação em Portugal (IPC) | ❌ | ✅ |
-| 6 | **ISV** | Imposto Sobre Veículos (ano, cilindrada, CO₂) | ❌ | ✅ |
-| 7 | **IUC** | Imposto Único de Circulação (ano, CO₂) | ❌ | ✅ |
-| 8 | **Poupança** | Juros compostos — planeamento financeiro | ✅ | ❌ |
+* **Purga de Artefactos:** Remoção total de cópias `.backup`, logs locais, dumps de ferramentas de scan (`sqlmap`, `nuclei`, `nikto`) e payloads de cookies utilizados em testes de invasão.
+* **Isolamento de Domínio:** Separação estrita entre a camada de apresentação (Flask/Jinja2), a lógica de filtragem/segurança (`ip_blocker.py`, `rate_limits.py`) e os motores de cálculo puro.
+* **Padronização:** Ajuste do código aos padrões de legibilidade e manutenibilidade do PEP 8, garantindo que futuras expansões sejam limpas e previsíveis.
 
 ---
 
-## 🛡️ Funcionalidades de Segurança
+## 🧮 Módulos de Cálculo Integrados (8)
 
-### Headers HTTP
+A aplicação centraliza oito simuladores financeiros e fiscais essenciais para o contexto macroeconómico português:
 
-Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
-X-Frame-Options: DENY
-X-Content-Type-Options: nosniff
-Referrer-Policy: same-origin
-Content-Security-Policy: default-src 'self' https://*.buymeacoffee.com
-Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
-
-
-### Proteções Implementadas
-
-- ✅ **Rate Limiting** — por endpoint (HTML: 5/min, API: 10/min)
-- ✅ **Bloqueio de XSS** — deteção de `<script>`, `onerror=`, `alert(`, etc.
-- ✅ **Bloqueio de SQL Injection** — deteção de `UNION`, `SELECT`, `DROP`, `OR '1'='1`, etc.
-- ✅ **Validação de Inputs** — números válidos, intervalos, tipos
-- ✅ **Bloqueio por Cookie** — utilizador bloqueado sem afetar outros na mesma rede
-- ✅ **CORS Restrito** — apenas domínios autorizados
-- ✅ **Logging de Segurança** — registo de todos os eventos suspeitos
+1. **Salário Líquido:** Suporte para Contrato de Outrem e Trabalhadores Independentes (ENI).
+2. **Crédito Habitação:** Simulação pelo Sistema Price com geração de tabela de amortização.
+3. **Rescisão de Contrato:** Cálculo de indemnizações e direitos laborais cessantes.
+4. **Subsídio de Desemprego:** Integração com os limites e indexantes IAS correspondentes.
+5. **Inflação (INE):** Atualização de valores com base no Índice de Preços ao Consumidor real.
+6. **ISV:** Cálculo do Imposto Sobre Veículos baseado nas tabelas de CO₂ e cilindrada.
+7. **IUC:** Simulador do Imposto Único de Circulação.
+8. **Poupança:** Projeções de evolução patrimonial baseadas em juros compostos.
 
 ---
 
-## 🔌 APIs Disponíveis
+## 📁 Estrutura de Ficheiros Otimizada
 
-| Endpoint | Método | Descrição | Exemplo |
-|----------|--------|-----------|---------|
-| `/api/salario` | POST | Calcula salário líquido | `{"bruto":1500}` |
-| `/api/credito` | POST | Simula crédito habitação | `{"valor_imovel":200000}` |
-| `/api/rescisao` | POST | Calcula indemnização | `{"vencimento_base":1200}` |
-| `/api/subsidio` | POST | Calcula subsídio desemprego | `{"media_salarial":1200}` |
-| `/api/ine/inflacao` | GET | Inflação em Portugal | — |
-| `/api/carros/isv` | GET | Imposto Sobre Veículos | `?ano=2020&cilindrada=2000&co2=150` |
-| `/api/carros/iuc` | GET | Imposto Único de Circulação | `?ano=2020&co2=150` |
-| `/api/health` | GET | Health check | — |
-
-### Exemplo de uso da API
-
-```bash
-# Calcular salário líquido
-curl -X POST https://calculadoras-portugal.onrender.com/api/salario \
-  -H "Content-Type: application/json" \
-  -d '{"bruto": 1500}'
-
-# Resposta
-{
-  "bruto": 1500,
-  "liquido": 1047,
-  "irs": 420,
-  "seguranca_social": 165,
-  "regime": "Conta de Outrem"
-}
-
-🛠️ Tecnologias Utilizadas
-Backend
-
-    Python 3.12 + Flask 3.0.3
-
-    SQLite (cache de notícias e histórico)
-
-    Gunicorn (servidor WSGI)
-
-Frontend
-
-    Jinja2 (templates)
-
-    CSS Puro (sem frameworks)
-
-    JavaScript (Dark Mode, interações)
-
-Segurança
-
-    Flask-Limiter (rate limiting)
-
-    Custom Security Headers (CSP, HSTS, etc.)
-
-    Input Validation (sanitização e validação)
-
-PDFs
-
-    ReportLab 4.2.5 (geração de PDFs)
-
-APIs Externas
-
-    INE — dados de inflação (JSON)
-
-    ClaraCars — cálculo ISV/IUC
-
-DevOps
-
-    Render (deploy gratuito)
-
-    GitHub Actions (CI/CD com Bandit e Safety)
-
-    Uptime Robot (monitorização)
-
-📁 Estrutura do Projeto
-
-calculadoras-portugal/
-├── app.py                    # Flask principal (rotas, segurança)
-├── initdb.py                 # Inicialização da base de dados
-├── rate_limits.py            # Configuração de rate limiting
-├── ip_blocker.py             # Bloqueio de IPs e ataques
-├── security_logger.py        # Logging de segurança
-├── render.yaml               # Configuração Render
-├── requirements.txt          # Dependências Python
-├── README.md                 # Este ficheiro
-│
-├── templates/                # HTML (Jinja2)
-│   ├── base.html             # Template base (menu, dark mode)
-│   ├── home.html             # Página inicial (8 cards)
-│   ├── salario.html          # Calculadora Salário
-│   ├── credito.html          # Calculadora Crédito
-│   ├── rescisao.html         # Calculadora Rescisão
-│   ├── subsidio.html         # Calculadora Subsídio
-│   ├── inflacao.html         # Calculadora Inflação
-│   ├── isv.html              # Calculadora ISV
-│   ├── iuc.html              # Calculadora IUC
-│   ├── poupanca.html         # Calculadora Poupança
-│   ├── historico.html        # Histórico de cálculos
-│   ├── bloqueado.html        # Página de bloqueio
-│   └── 500.html              # Página de erro
+```text
+ondoreoku-calculadoras-portugal/
+├── app.py                    # Ponto de entrada Flask (Rotas e Middlewares)
+├── initdb.py                 # Inicialização estrutural do SQLite
+├── rate_limits.py            # Regras e limites de tráfego por IP
+├── ip_blocker.py             # Lógica de contenção e bloqueio adaptativo
+├── security_logger.py        # Centralização de logs e auditoria interna
+├── render.yaml               # Infraestrutura como código (Blueprint Render)
+├── requirements.txt          # Dependências Python estritas e atualizadas
+├── README.md                 # Documentação técnica do projeto
 │
 ├── static/
 │   └── css/
-│       └── style.css         # Estilos (inclui Dark Mode)
+│       └── style.css         # Estilização global e suporte a Dark Mode
 │
-├── utils/                    # Módulos de cálculo
+├── templates/                # Camada de Visualização (HTML + Jinja2)
+│   ├── base.html             # Esqueleto estrutural comum
+│   └── [calculadoras].html   # Interfaces dedicadas a cada simulador
+│
+├── utils/                    # Motores de Cálculo Isolados (Regras de Negócio)
 │   ├── __init__.py
-│   ├── salario.py            # Lógica do salário
-│   ├── credito.py            # Lógica do crédito
-│   ├── rescisao.py           # Lógica da rescisão
-│   ├── subsidio.py           # Lógica do subsídio
-│   ├── poupanca.py           # Lógica da poupança (juros compostos)
-│   ├── ine.py                # API INE (inflação)
-│   ├── carros.py             # API Carros (ISV/IUC)
-│   ├── noticias.py           # Feed RSS (ECO, Negócios, Económico)
-│   └── pdf.py                # Geração de PDFs (reportlab)
+│   ├── salario.py | credito.py | rescisao.py | subsidio.py | poupanca.py
+│   ├── ine.py | carros.py    # Integrações externas e parsing de tabelas
+│   ├── noticias.py           # Parsing do Feed RSS de atualizações económicas
+│   └── pdf.py                # Geração de relatórios estruturados (ReportLab)
 │
-├── .github/
-│   └── workflows/
-│       └── security.yml      # GitHub Actions (Bandit, Safety)
-│
-└── sqlmap_results/           # Resultados de testes de segurança (SQLMap)
+└── .github/
+    └── workflows/
+        └── security.yml      # CI/CD - Verificação estática de segurança
 
-🖥️ Como Executar Localmente
+## 🖥️ Configuração do Ambiente Local
 
-# 1. Clonar o repositório
-git clone https://github.com/ondoreoku/calculadoras-portugal.git
-cd calculadoras-portugal
+1. **Clonar o repositório e aceder à diretoria:**
+   ```bash
+   git clone [https://github.com/ondoreoku/calculadoras-portugal.git](https://github.com/ondoreoku/calculadoras-portugal.git)
+   cd calculadoras-portugal
 
-# 2. Mudar para o branch CYBERSEC
-git checkout CYBERSEC
+git checkout clean-code
 
-# 3. Criar ambiente virtual
 python3 -m venv venv
-source venv/bin/activate  # Linux/Mac
-# venv\Scripts\activate   # Windows
+source venv/bin/activate
 
-# 4. Instalar dependências
 pip install -r requirements.txt
 
-# 5. Criar base de dados (só uma vez)
 python3 initdb.py
 
-# 6. Iniciar servidor
 python3 app.py
 
-# 7. Abrir http://127.0.0.1:5000
+Para validar que as operações de limpeza e refatoração mantiveram a integridade de todas as rotas e regras fiscais, execute o script de automação de testes:
 
-🚀 Deploy no Render
-Configuração automática (via render.yaml)
+./testar_tudo.sh
 
-services:
-  - type: web
-    name: calculadoras-portugal-2026
-    runtime: python
-    plan: free
-    buildCommand: |
-      apt-get update && apt-get install -y \
-        build-essential \
-        python3-dev \
-        libpango1.0-dev \
-        libpangoft2-1.0-0 \
-        libharfbuzz-dev \
-        libfreetype-dev \
-        libffi-dev \
-        libjpeg-dev \
-        libopenjp2-7 \
-        libtiff-dev \
-        && pip install -r requirements.txt
-    startCommand: "gunicorn app:app"
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.0
-      - key: FLASK_ENV
-        value: production
-        
-Deploy manual
-
-git push origin CYBERSEC
-# O Render deteta automaticamente e faz deploy
-
-🧪 Testes Automatizados
-Executar testes completos
-
-./testar_completo.sh
-
-O que é testado (29 testes)
-
-    ✅ Health Check
-
-    ✅ Todas as páginas HTML (8 calculadoras + home + histórico)
-
-    ✅ APIs (Salário, Crédito, Rescisão, Subsídio, INE, ISV, IUC)
-
-    ✅ PDFs (todas as calculadoras com PDF)
-
-    ✅ Headers de Segurança (5 headers)
-
-    ✅ Rate Limiting
-
-    ✅ XSS Protection
-
-    ✅ SQL Injection Protection
-
-    ✅ Dark Mode
-
-    ✅ Notícias
-
-    ✅ CORS
-
-    ✅ Interface Visual
-
-Resultado esperado
-text
-
-✅ Total de testes: 29
-✅ Passaram: 29
-❌ Falharam: 0
-📊 Taxa de sucesso: 100%
-🎉 TODOS OS TESTES PASSARAM!
-🚀 PROJETO 100% FUNCIONAL!
-
-🔗 Links Úteis
-
-    🌐 Site em produção: https://calculadoras-portugal.onrender.com
-
-    📦 Repositório: https://github.com/ondoreoku/calculadoras-portugal
-
-    📊 Uptime Robot: https://uptimerobot.com
-
-    ☕ Apoiar o projeto: https://www.buymeacoffee.com/ondoreoku
-
-📝 Notas
-
-    Este branch (CYBERSEC) é a versão principal em produção.
-
-    O branch main contém a versão base (sem as funcionalidades avançadas).
-
-    O Render está configurado para fazer deploy automático do branch CYBERSEC.
-
-© 2026 Calculadoras Portugal — Branch CYBERSEC
+© 2026 Calculadoras Portugal — Engenharia e Refatoração de Software.
