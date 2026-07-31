@@ -1,4 +1,3 @@
-
 # Python
 __pycache__/
 *.py[cod]
@@ -38,3 +37,18 @@ database.db
 *.swp
 *.swo
 *~
+
+# --- SEGURANÇA, AUDITORIA E LOGS ---
+# Relatórios e logs de ferramentas de scan
+*_results.json
+*_results.txt
+nuclei_*.txt
+cookies_*.txt
+whatweb.json
+
+# Diretorias de output de ferramentas
+sqlmap_results/
+backups/
+
+# Logs gerais da aplicação
+*.log
