@@ -1,3 +1,0 @@
-https://calculadoras-portugal.onrender.com/api/salario (POST)  # /usr/bin/sqlmap -u https://calculadoras-portugal.onrender.com/api/salario --data={\"bruto\":1500} "--headers=Content-Type: application/json" --batch --output-dir=sqlmap_results
-
-{"bruto":1500}
