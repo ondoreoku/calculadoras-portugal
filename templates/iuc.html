@@ -6,10 +6,11 @@
 {% block content %}
 <div class="container">
     <h1>Calculadora de IUC 2026</h1>
-    <p class="subtitulo">Calcula o Imposto Único de Circulação (IUC) para automóveis ligeiros</p>
+    <p class="subtitulo">Calcula o Imposto Único de Circulação (IUC) para automóveis ligeiros matriculados pós-2007</p>
 
     <section class="form-card">
-        <form method="POST" action="/iuc">
+        <!-- Form atualizado com ID e todos os campos requeridos pela lógica local -->
+        <form id="form-iuc" method="POST" action="/iuc">
             {% if erro %}
             <div style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 ⚠️ {{ erro }}
@@ -19,11 +20,22 @@
             <div class="grid">
                 <div class="input-group">
                     <label>Ano do Veículo</label>
-                    <input type="number" name="ano" min="1990" max="2026" required value="{{ ano or 2020 }}" placeholder="Ex: 2020">
+                    <input type="number" name="ano" id="ano" min="2007" max="2026" required value="2020">
                 </div>
-                <div class="input-group full-width">
+                <div class="input-group">
+                    <label>Cilindrada (cc)</label>
+                    <input type="number" name="cilindrada" id="cilindrada" min="1" required value="1500" placeholder="Ex: 1498">
+                </div>
+                <div class="input-group">
                     <label>Emissões CO₂ (g/km)</label>
-                    <input type="number" name="co2" min="0" step="1" required value="{{ co2 or 150 }}" placeholder="Ex: 150">
+                    <input type="number" name="co2" id="co2" min="0" required value="130" placeholder="Ex: 125">
+                </div>
+                <div class="input-group">
+                    <label>Combustível</label>
+                    <select name="combustivel" id="combustivel">
+                        <option value="gasolina">Gasolina / Híbrido Gasolina</option>
+                        <option value="gasoleo">Gasóleo (Diesel) / Híbrido Diesel</option>
+                    </select>
                 </div>
             </div>
 
@@ -34,25 +46,32 @@
         <div class="resultados visible" style="margin-top: 25px;">
             <div class="grid-res">
                 <div class="res-card">
-                    <small>IUC Total</small>
+                    <small>IUC Total a Pagar</small>
                     <div class="big-val">€{{ "%.2f"|format(resultado.iuc) if resultado.iuc else resultado.iuc }}</div>
                 </div>
                 <div class="res-card">
-                    <small>Componente CO₂</small>
-                    <div class="big-val" style="color: #3b82f6;">€{{ "%.2f"|format(resultado.taxa_co2) if resultado.taxa_co2 else 0 }}</div>
+                    <small>Categoria do Veículo</small>
+                    <div class="big-val" style="color: #3b82f6; font-size: 1.1rem; padding-top: 8px;">{{ resultado.category }}</div>
                 </div>
             </div>
 
             <div class="info-extra">
-                <p><strong>Componente Cilindrada:</strong> €{{ "%.2f"|format(resultado.taxa_cilindrada) if resultado.taxa_cilindrada else 0 }}</p>
-                <p><strong>Coeficiente:</strong> {{ resultado.coef if resultado.coef else 1.0 }}</p>
-                <p><strong>Categoria:</strong> {{ resultado.category if resultado.category else 'N/A' }}</p>
-                {% if resultado.erro %}
-                <p style="color:#c00;"><strong>Erro:</strong> {{ resultado.erro }}</p>
-                {% endif %}
+                <p><strong>Parcela Cilindrada:</strong> €{{ "%.2f"|format(resultado.taxa_cilindrada) if resultado.taxa_cilindrada else 0 }}</p>
+                <p><strong>Parcela CO₂:</strong> €{{ "%.2f"|format(resultado.taxa_co2) if resultado.taxa_co2 else 0 }}</p>
+                <p><strong>Coeficiente por Ano:</strong> x{{ resultado.coef if resultado.coef else 1.0 }}</p>
                 {% if resultado.nota %}
-                <p><strong>Nota:</strong> {{ resultado.nota }}</p>
+                <p style="color: #059669;"><strong>Nota:</strong> {{ resultado.nota }}</p>
                 {% endif %}
+            </div>
+
+            <!-- Adicionado o botão para fazer o download do PDF -->
+            <div style="text-align:center;margin-top:20px;">
+                <a href="#" 
+                   id="btn-pdf-iuc" 
+                   target="_blank" 
+                   style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
+                   📄 Baixar PDF dos Resultados
+                </a>
             </div>
 
             <div class="bmc-container" style="text-align: center; margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 10px; border: 1px solid #059669;">
@@ -63,4 +82,38 @@
         {% endif %}
     </section>
 </div>
+
+<script>
+    // Salva todas as variáveis introduzidas no sessionStorage aquando da submissão
+    document.getElementById('form-iuc').addEventListener('submit', function() {
+        sessionStorage.setItem('iuc_ano', document.getElementById('ano').value);
+        sessionStorage.setItem('iuc_cilindrada', document.getElementById('cilindrada').value);
+        sessionStorage.setItem('iuc_co2', document.getElementById('co2').value);
+        sessionStorage.setItem('iuc_combustivel', document.getElementById('combustivel').value);
+    });
+
+    // Repõe os valores digitados após o recarregamento
+    window.addEventListener('DOMContentLoaded', function() {
+        if (sessionStorage.getItem('iuc_ano')) document.getElementById('ano').value = sessionStorage.getItem('iuc_ano');
+        if (sessionStorage.getItem('iuc_cilindrada')) document.getElementById('cilindrada').value = sessionStorage.getItem('iuc_cilindrada');
+        if (sessionStorage.getItem('iuc_co2')) document.getElementById('co2').value = sessionStorage.getItem('iuc_co2');
+        if (sessionStorage.getItem('iuc_combustivel')) document.getElementById('combustivel').value = sessionStorage.getItem('iuc_combustivel');
+
+        // Configuração dinâmica da rota do PDF com todos os parâmetros
+        const btnPdf = document.getElementById('btn-pdf-iuc');
+        if (btnPdf) {
+            btnPdf.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                const ano = document.getElementById('ano').value;
+                const cilindrada = document.getElementById('cilindrada').value;
+                const co2 = document.getElementById('co2').value;
+                const combustivel = document.getElementById('combustivel').value;
+
+                const urlFinal = `/iuc/pdf?ano=${ano}&cilindrada=${cilindrada}&co2=${co2}&combustivel=${combustivel}`;
+                window.open(urlFinal, '_blank');
+            });
+        }
+    });
+</script>
 {% endblock %}

@@ -9,7 +9,8 @@
         <p class="subtitulo">Calcula o teu salário após descontos de IRS e Segurança Social</p>
 
         <section class="form-card">
-            <form method="POST" action="/salario">
+            <!-- Adicionado o ID para podermos intercetar os dados na submissão -->
+            <form id="form-salario" method="POST" action="/salario">
             {% if erro %}
             <div style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 ⚠️ {{ erro }}
@@ -26,19 +27,19 @@
                 <div class="grid">
                     <div class="input-group">
                         <label>Salário Bruto Mensal (€)</label>
-                        <input type="number" name="bruto" step="0.01" min="0" required 
-                               value="{{ bruto or 1500 }}" placeholder="Ex: 1500.00">
+                        <input type="number" name="bruto" id="salario_bruto" step="0.01" min="0" required 
+                               value="1500" placeholder="Ex: 1500.00">
                     </div>
 
                     <div id="campos-outrem" class="sub-grid">
                         <div class="input-group">
                             <label>Subsídio Alimentação (€/dia)</label>
-                            <input type="number" name="subsidio_alimentacao" step="0.01" min="0" 
-                                   value="{{ subsidio_alimentacao or 6.0 }}" placeholder="Ex: 6.00">
+                            <input type="number" name="subsidio_alimentacao" id="subsidio_alimentacao" step="0.01" min="0" 
+                                   value="6.0" placeholder="Ex: 6.00">
                         </div>
                         <div class="input-group">
                             <label>Estado Civil</label>
-                            <select name="estado_civil">
+                            <select name="estado_civil" id="estado_civil">
                                 <option value="solteiro" {% if estado_civil == 'solteiro' %}selected{% endif %}>Solteiro</option>
                                 <option value="casado" {% if estado_civil == 'casado' %}selected{% endif %}>Casado</option>
                             </select>
@@ -48,17 +49,17 @@
                     <div id="campos-eni" class="sub-grid" style="display: none;">
                         <div class="input-group">
                             <label>Coeficiente de Atividade</label>
-                            <input type="number" name="coeficiente_atividade" step="0.01" min="0" max="1" 
-                                   value="{{ coeficiente_atividade or 0.75 }}" placeholder="Ex: 0.75">
+                            <input type="number" name="coeficiente_atividade" id="coeficiente_atividade" step="0.01" min="0" max="1" 
+                                   value="0.75" placeholder="Ex: 0.75">
                         </div>
                         <div class="input-group">
                             <label>Retenção IRS (%)</label>
-                            <input type="number" name="retencao_irs" step="0.01" min="0" max="1" 
-                                   value="{{ retencao_irs or 0.15 }}" placeholder="Ex: 0.15">
+                            <input type="number" name="retencao_irs" id="retencao_irs" step="0.01" min="0" max="1" 
+                                   value="0.15" placeholder="Ex: 0.15">
                         </div>
                         <div class="input-group full-width">
                             <label>Isento de Segurança Social?</label>
-                            <select name="isento_ss">
+                            <select name="isento_ss" id="isento_ss">
                                 <option value="nao" {% if isento_ss == 'nao' %}selected{% endif %}>Não</option>
                                 <option value="sim" {% if isento_ss == 'sim' %}selected{% endif %}>Sim</option>
                             </select>
@@ -68,9 +69,24 @@
 
                 <button type="submit" class="btn-main">Calcular Salário</button>
             </form>
+            
             <div style="text-align:center;margin-top:15px;">
-                <a href="/salario/pdf?salario_bruto={{ bruto }}&regime={{ regime }}" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">📄 Baixar PDF</a>
-                <span style="color:#6b7280;font-size:0.8rem;margin-left:10px;">(exemplo com 1500€)</span>
+                {% if resultado %}
+                    <!-- Botão dinâmico controlado por JavaScript -->
+                    <a href="#" 
+                       id="btn-pdf-salario"
+                       target="_blank" 
+                       style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
+                       📄 Baixar PDF dos Resultados
+                    </a>
+                {% else %}
+                    <a href="/salario/pdf?salario_bruto=1500&regime=outrem&subsidio_alimentacao=6.0&estado_civil=solteiro" 
+                       target="_blank" 
+                       style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
+                       📄 Baixar PDF Exemplo
+                    </a>
+                    <span style="color:#6b7280;font-size:0.8rem;margin-left:10px;">(exemplo padrão com 1500€)</span>
+                {% endif %}
             </div>
 
             {% if resultado %}
@@ -128,6 +144,53 @@
             }
         }
 
-        window.onload = toggleRegime;
+        // Script de persistência inteligente e geração correta do URL do PDF
+        document.getElementById('form-salario').addEventListener('submit', function() {
+            sessionStorage.setItem('sal_regime', document.getElementById('regime-select').value);
+            sessionStorage.setItem('sal_bruto', document.getElementById('salario_bruto').value);
+            sessionStorage.setItem('sal_sub_alim', document.getElementById('subsidio_alimentacao').value);
+            sessionStorage.setItem('sal_est_civil', document.getElementById('estado_civil').value);
+            sessionStorage.setItem('sal_coeficiente', document.getElementById('coeficiente_atividade').value);
+            sessionStorage.setItem('sal_ret_irs', document.getElementById('retencao_irs').value);
+            sessionStorage.setItem('sal_isento_ss', document.getElementById('isento_ss').value);
+        });
+
+        window.addEventListener('DOMContentLoaded', function() {
+            // Executa a função para mostrar/esconder os campos com base no regime selecionado
+            toggleRegime();
+
+            // Recupera e repõe os dados nos inputs caso existam na sessão
+            if (sessionStorage.getItem('sal_regime')) document.getElementById('regime-select').value = sessionStorage.getItem('sal_regime');
+            if (sessionStorage.getItem('sal_bruto')) document.getElementById('salario_bruto').value = sessionStorage.getItem('sal_bruto');
+            if (sessionStorage.getItem('sal_sub_alim')) document.getElementById('subsidio_alimentacao').value = sessionStorage.getItem('sal_sub_alim');
+            if (sessionStorage.getItem('sal_est_civil')) document.getElementById('estado_civil').value = sessionStorage.getItem('sal_est_civil');
+            if (sessionStorage.getItem('sal_coeficiente')) document.getElementById('coeficiente_atividade').value = sessionStorage.getItem('sal_coeficiente');
+            if (sessionStorage.getItem('sal_ret_irs')) document.getElementById('retencao_irs').value = sessionStorage.getItem('sal_ret_irs');
+            if (sessionStorage.getItem('sal_isento_ss')) document.getElementById('isento_ss').value = sessionStorage.getItem('sal_isento_ss');
+
+            // Garante que a vista correta é mantida após repor o valor do regime
+            toggleRegime();
+
+            // Configuração dinâmica do link do PDF
+            const btnPdf = document.getElementById('btn-pdf-salario');
+            if (btnPdf) {
+                btnPdf.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const regime = document.getElementById('regime-select').value;
+                    const bruto = document.getElementById('salario_bruto').value;
+                    const subAlim = document.getElementById('subsidio_alimentacao').value;
+                    const estCivil = document.getElementById('estado_civil').value;
+                    const coef = document.getElementById('coeficiente_atividade').value;
+                    const retIrs = document.getElementById('retencao_irs').value;
+                    const isentoSs = document.getElementById('isento_ss').value;
+
+                    // Constrói o URL completo com todos os parâmetros que o teu backend pode precisar
+                    let urlFinal = `/salario/pdf?salario_bruto=${bruto}&regime=${regime}&subsidio_alimentacao=${subAlim}&estado_civil=${estCivil}&coeficiente_atividade=${coef}&retencao_irs=${retIrs}&isento_ss=${isentoSs}`;
+                    
+                    window.open(urlFinal, '_blank');
+                });
+            }
+        });
     </script>
 {% endblock %}

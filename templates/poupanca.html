@@ -9,7 +9,8 @@
     <p class="subtitulo">Calcula o valor futuro com juros compostos – planeia as tuas finanças</p>
 
     <section class="form-card">
-        <form method="POST" action="/poupanca">
+        <!-- Adicionado o ID ao form -->
+        <form id="form-poupanca" method="POST" action="/poupanca">
             {% if erro %}
             <div style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 ⚠️ {{ erro }}
@@ -19,19 +20,19 @@
             <div class="grid">
                 <div class="input-group">
                     <label>Valor Inicial (€)</label>
-                    <input type="number" name="capital_inicial" step="0.01" min="0" required value="{{ capital_inicial or 1000 }}" placeholder="Ex: 1000">
+                    <input type="number" name="capital_inicial" id="capital_inicial" step="0.01" min="0" required value="1000" placeholder="Ex: 1000">
                 </div>
                 <div class="input-group">
                     <label>Contribuição Mensal (€)</label>
-                    <input type="number" name="contribuicao_mensal" step="0.01" min="0" value="{{ contribuicao_mensal or 100 }}" placeholder="Ex: 100">
+                    <input type="number" name="contribuicao_mensal" id="contribuicao_mensal" step="0.01" min="0" value="100" placeholder="Ex: 100">
                 </div>
                 <div class="input-group">
                     <label>Taxa de Juro Anual (%)</label>
-                    <input type="number" name="taxa_juro" step="0.01" min="0" required value="{{ taxa_juro or 5 }}" placeholder="Ex: 5">
+                    <input type="number" name="taxa_juro" id="taxa_juro" step="0.01" min="0" required value="5" placeholder="Ex: 5">
                 </div>
                 <div class="input-group">
                     <label>Período (anos)</label>
-                    <input type="number" name="periodo" step="1" min="1" required value="{{ periodo or 10 }}" placeholder="Ex: 10">
+                    <input type="number" name="periodo" id="periodo" step="1" min="1" required value="10" placeholder="Ex: 10">
                 </div>
             </div>
 
@@ -69,7 +70,13 @@
             </div>
 
             <div style="text-align:center;margin-top:20px;">
-                <a href="/poupanca/pdf?capital_inicial={{ capital_inicial }}&contribuicao_mensal={{ contribuicao_mensal }}&taxa_juro={{ taxa_juro }}&periodo={{ periodo }}" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">📄 Baixar PDF</a>
+                <!-- Botão dinâmico injetado com ID -->
+                <a href="#" 
+                   id="btn-pdf-poupanca" 
+                   target="_blank" 
+                   style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
+                   📄 Baixar PDF dos Resultados
+                </a>
             </div>
 
             <div class="bmc-container" style="text-align: center; margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 10px; border: 1px solid #059669;">
@@ -80,4 +87,38 @@
         {% endif %}
     </section>
 </div>
+
+<script>
+    // Armazena as variáveis no sessionStorage na submissão do formulário
+    document.getElementById('form-poupanca').addEventListener('submit', function() {
+        sessionStorage.setItem('poupa_capital', document.getElementById('capital_inicial').value);
+        sessionStorage.setItem('poupa_mensal', document.getElementById('contribuicao_mensal').value);
+        sessionStorage.setItem('poupa_juro', document.getElementById('taxa_juro').value);
+        sessionStorage.setItem('poupa_periodo', document.getElementById('periodo').value);
+    });
+
+    // Repõe os valores digitados após o recarregamento da página
+    window.addEventListener('DOMContentLoaded', function() {
+        if (sessionStorage.getItem('poupa_capital')) document.getElementById('capital_inicial').value = sessionStorage.getItem('poupa_capital');
+        if (sessionStorage.getItem('poupa_mensal')) document.getElementById('contribuicao_mensal').value = sessionStorage.getItem('poupa_mensal');
+        if (sessionStorage.getItem('poupa_juro')) document.getElementById('taxa_juro').value = sessionStorage.getItem('poupa_juro');
+        if (sessionStorage.getItem('poupa_periodo')) document.getElementById('periodo').value = sessionStorage.getItem('poupa_periodo');
+
+        // Configuração dinâmica do URL do PDF
+        const btnPdf = document.getElementById('btn-pdf-poupanca');
+        if (btnPdf) {
+            btnPdf.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                const capital = document.getElementById('capital_inicial').value;
+                const mensal = document.getElementById('contribuicao_mensal').value;
+                const juro = document.getElementById('taxa_juro').value;
+                const periodo = document.getElementById('periodo').value;
+
+                const urlFinal = `/poupanca/pdf?capital_inicial=${capital}&contribuicao_mensal=${mensal}&taxa_juro=${juro}&periodo=${periodo}`;
+                window.open(urlFinal, '_blank');
+            });
+        }
+    });
+</script>
 {% endblock %}

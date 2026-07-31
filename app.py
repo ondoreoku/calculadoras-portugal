@@ -1,9 +1,3 @@
-"""
-================================================================================
-APP.PY — Aplicação Flask Principal
-================================================================================
-"""
-
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask import make_response
 from flask_cors import CORS
@@ -40,12 +34,13 @@ CORS(app, resources={
 
 from utils.noticias import get_noticias, atualizar_noticias, limpar_cache_antigo
 from utils.ine import get_inflacao
-from utils.carros import calcular_isv, calcular_iuc, calcular_iuc_fallback
+from utils.carros import calcular_isv, calcular_iuc
 from utils.pdf import gerar_pdf_resultado
 from utils.subsidio import calcular_subsidio
 from utils.credito import calcular_credito, calcular_tabela_amortizacao
 from utils.salario import calcular_salario
 from utils.rescisao import calcular_rescisao
+from utils.poupanca import calcular_poupanca
 from rate_limits import limiter
 from security_logger import log_security_event, log_brute_force_attempt, log_invalid_input
 from ip_blocker import check_ip_block, register_failed_attempt, is_blocked, get_block_reason
@@ -58,8 +53,19 @@ def validar_numero(valor, nome="valor", min_val=0, max_val=1000000):
         if num < min_val or num > max_val:
             return None, f"{nome} deve estar entre {min_val} e {max_val}"
         return num, None
-    except ValueError:
+    except (ValueError, TypeError):
         return None, f"{nome} inválido"
+
+def validar_data(data_str, nome="data"):
+    if not data_str:
+        return None, f"{nome} obrigatória"
+    try:
+        data_obj = datetime.strptime(data_str, "%Y-%m-%d")
+        if data_obj.year < 1900 or data_obj.year > 2100:
+            return None, f"{nome} com ano inválido"
+        return data_str, None
+    except ValueError:
+        return None, f"{nome} no formato inválido (deve ser AAAA-MM-DD)"
 
 def init_db_if_missing():
     if not os.path.exists(DATABASE):
@@ -138,6 +144,10 @@ def historico():
             "salario": "Salário Líquido",
             "credito": "Crédito Habitação",
             "rescisao": "Rescisão",
+            "poupanca": "Poupança",
+            "isv": "ISV",
+            "iuc": "IUC",
+            "inflacao": "Inflação",
         }
         registos.append({
             "tipo": nomes_tipos.get(row["tipo"], row["tipo"]),
@@ -184,7 +194,7 @@ def salario():
             if erro:
                 log_invalid_input(request.remote_addr, "/salario", request.form.get("subsidio_alimentacao", ""))
                 register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
-                return render_template("salario.html", erro=erro)
+                return render_template("salario.html", erro=erro, regime=regime, bruto=bruto)
             estado_civil = request.form.get("estado_civil", "solteiro")
             resultado = calcular_salario(
                 bruto=bruto,
@@ -197,12 +207,12 @@ def salario():
             if erro:
                 log_invalid_input(request.remote_addr, "/salario", request.form.get("coeficiente_atividade", ""))
                 register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
-                return render_template("salario.html", erro=erro)
+                return render_template("salario.html", erro=erro, regime=regime, bruto=bruto)
             retencao_irs, erro = validar_numero(request.form.get("retencao_irs", 0.15), "Retenção IRS", 0, 1)
             if erro:
                 log_invalid_input(request.remote_addr, "/salario", request.form.get("retencao_irs", ""))
                 register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
-                return render_template("salario.html", erro=erro)
+                return render_template("salario.html", erro=erro, regime=regime, bruto=bruto)
             isento_ss = request.form.get("isento_ss", "nao")
             resultado = calcular_salario(
                 bruto=bruto,
@@ -245,38 +255,50 @@ def credito():
     resultado = None
     tabela = None
     erro = None
+    
+    valor_imovel = 200000
+    entrada = 20000
+    prazo_anos = 30
+    spread = 1.0
+    euribor = 3.5
 
     if request.method == "POST":
-        valor_imovel, erro = validar_numero(request.form.get("valor_imovel", 0), "Valor do imóvel")
+        val_imovel_raw = request.form.get("valor_imovel", "0")
+        entrada_raw = request.form.get("entrada", "0")
+        prazo_raw = request.form.get("prazo_anos", "30")
+        spread_raw = request.form.get("spread", "0")
+        euribor_raw = request.form.get("euribor", "0")
+
+        valor_imovel, erro = validar_numero(val_imovel_raw, "Valor do imóvel")
         if erro:
-            log_invalid_input(request.remote_addr, "/credito", request.form.get("valor_imovel", ""))
-            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
-            return render_template("credito.html", erro=erro)
+            log_invalid_input(request.remote_addr, "/credito", val_imovel_raw)
+            register_failed_attempt(request.remote_addr, val_imovel_raw, "/credito")
+            return render_template("credito.html", erro=erro, valor_imovel=val_imovel_raw, entrada=entrada_raw, prazo_anos=prazo_raw, spread=spread_raw, euribor=euribor_raw)
             
-        entrada, erro = validar_numero(request.form.get("entrada", 0), "Entrada")
+        entrada, erro = validar_numero(entrada_raw, "Entrada")
         if erro:
-            log_invalid_input(request.remote_addr, "/credito", request.form.get("entrada", ""))
-            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
-            return render_template("credito.html", erro=erro)
+            log_invalid_input(request.remote_addr, "/credito", entrada_raw)
+            register_failed_attempt(request.remote_addr, entrada_raw, "/credito")
+            return render_template("credito.html", erro=erro, valor_imovel=valor_imovel, entrada=entrada_raw, prazo_anos=prazo_raw, spread=spread_raw, euribor=euribor_raw)
             
-        prazo_anos, erro = validar_numero(request.form.get("prazo_anos", 0), "Prazo", 1, 50)
+        prazo_anos, erro = validar_numero(prazo_raw, "Prazo", 1, 50)
         if erro:
-            log_invalid_input(request.remote_addr, "/credito", request.form.get("prazo_anos", ""))
-            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
-            return render_template("credito.html", erro=erro)
+            log_invalid_input(request.remote_addr, "/credito", prazo_raw)
+            register_failed_attempt(request.remote_addr, prazo_raw, "/credito")
+            return render_template("credito.html", erro=erro, valor_imovel=valor_imovel, entrada=entrada, prazo_anos=prazo_raw, spread=spread_raw, euribor=euribor_raw)
         prazo_anos = int(prazo_anos)
         
-        spread, erro = validar_numero(request.form.get("spread", 0), "Spread", 0, 100)
+        spread, erro = validar_numero(spread_raw, "Spread", 0, 100)
         if erro:
-            log_invalid_input(request.remote_addr, "/credito", request.form.get("spread", ""))
-            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
-            return render_template("credito.html", erro=erro)
+            log_invalid_input(request.remote_addr, "/credito", spread_raw)
+            register_failed_attempt(request.remote_addr, spread_raw, "/credito")
+            return render_template("credito.html", erro=erro, valor_imovel=valor_imovel, entrada=entrada, prazo_anos=prazo_anos, spread=spread_raw, euribor=euribor_raw)
             
-        euribor, erro = validar_numero(request.form.get("euribor", 0), "Euribor", -100, 100)
+        euribor, erro = validar_numero(euribor_raw, "Euribor", -100, 100)
         if erro:
-            log_invalid_input(request.remote_addr, "/credito", request.form.get("euribor", ""))
-            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
-            return render_template("credito.html", erro=erro)
+            log_invalid_input(request.remote_addr, "/credito", euribor_raw)
+            register_failed_attempt(request.remote_addr, euribor_raw, "/credito")
+            return render_template("credito.html", erro=erro, valor_imovel=valor_imovel, entrada=entrada, prazo_anos=prazo_anos, spread=spread, euribor=euribor_raw)
 
         resultado = calcular_credito(valor_imovel, entrada, prazo_anos, spread, euribor)
         tabela = calcular_tabela_amortizacao(valor_imovel, entrada, prazo_anos, spread, euribor, limite=12)
@@ -294,7 +316,15 @@ def credito():
             resultado_dict=resultado
         )
 
-    return render_template("credito.html", resultado=resultado, tabela=tabela, erro=erro)
+    return render_template("credito.html", 
+                           resultado=resultado, 
+                           tabela=tabela, 
+                           erro=erro, 
+                           valor_imovel=valor_imovel, 
+                           entrada=entrada, 
+                           prazo_anos=prazo_anos, 
+                           spread=spread, 
+                           euribor=euribor)
 
 @app.route("/rescisao", methods=["GET", "POST"])
 @check_ip_block()
@@ -315,36 +345,55 @@ def rescisao():
         vencimento_base, erro = validar_numero(request.form.get("vencimento_base", 0), "Vencimento base")
         if erro:
             log_invalid_input(request.remote_addr, "/rescisao", request.form.get("vencimento_base", ""))
-            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
+            register_failed_attempt(request.remote_addr, request.form.get("vencimento_base", ""), "/rescisao")
             return render_template("rescisao.html", erro=erro)
             
         subsidio_alimentacao, erro = validar_numero(request.form.get("subsidio_alimentacao", 0), "Subsídio alimentação")
         if erro:
             log_invalid_input(request.remote_addr, "/rescisao", request.form.get("subsidio_alimentacao", ""))
-            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
+            register_failed_attempt(request.remote_addr, request.form.get("subsidio_alimentacao", ""), "/rescisao")
             return render_template("rescisao.html", erro=erro)
             
-        data_inicio = request.form.get("data_inicio", "")
-        data_fim = request.form.get("data_fim", "")
+        data_inicio, erro = validar_data(request.form.get("data_inicio", ""), "Data de início")
+        if erro:
+            log_invalid_input(request.remote_addr, "/rescisao", request.form.get("data_inicio", ""))
+            register_failed_attempt(request.remote_addr, request.form.get("data_inicio", ""), "/rescisao")
+            return render_template("rescisao.html", erro=erro)
+
+        data_fim, erro = validar_data(request.form.get("data_fim", ""), "Data de fim")
+        if erro:
+            log_invalid_input(request.remote_addr, "/rescisao", request.form.get("data_fim", ""))
+            register_failed_attempt(request.remote_addr, request.form.get("data_fim", ""), "/rescisao")
+            return render_template("rescisao.html", erro=erro)
+
+        if data_inicio and data_fim:
+            d_ini = datetime.strptime(data_inicio, "%Y-%m-%d")
+            d_fim = datetime.strptime(data_fim, "%Y-%m-%d")
+            if d_fim < d_ini:
+                erro = "A data de fim não pode ser anterior à data de início"
+                log_invalid_input(request.remote_addr, "/rescisao", f"{data_inicio} > {data_fim}")
+                register_failed_attempt(request.remote_addr, data_fim, "/rescisao")
+                return render_template("rescisao.html", erro=erro)
+
         motivo = request.form.get("motivo", "caducidade_termo")
         meses_layoff, erro = validar_numero(request.form.get("meses_layoff", 0), "Meses em lay-off", 0, 100)
         if erro:
             log_invalid_input(request.remote_addr, "/rescisao", request.form.get("meses_layoff", ""))
-            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
+            register_failed_attempt(request.remote_addr, request.form.get("meses_layoff", ""), "/rescisao")
             return render_template("rescisao.html", erro=erro)
         meses_layoff = int(meses_layoff)
         
         ferias_vencidas, erro = validar_numero(request.form.get("ferias_vencidas", 0), "Férias vencidas", 0, 1000)
         if erro:
             log_invalid_input(request.remote_addr, "/rescisao", request.form.get("ferias_vencidas", ""))
-            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
+            register_failed_attempt(request.remote_addr, request.form.get("ferias_vencidas", ""), "/rescisao")
             return render_template("rescisao.html", erro=erro)
         ferias_vencidas = int(ferias_vencidas)
         
         horas_formacao, erro = validar_numero(request.form.get("horas_formacao", 0), "Horas de formação", 0, 1000)
         if erro:
             log_invalid_input(request.remote_addr, "/rescisao", request.form.get("horas_formacao", ""))
-            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
+            register_failed_attempt(request.remote_addr, request.form.get("horas_formacao", ""), "/rescisao")
             return render_template("rescisao.html", erro=erro)
         horas_formacao = int(horas_formacao)
 
@@ -389,26 +438,34 @@ def rescisao():
 def subsidio():
     resultado = None
     erro = None
+    
+    media_salarial = 1000
+    idade = 30
+    meses_desconto = 24
 
     if request.method == "POST":
-        media_salarial, erro = validar_numero(request.form.get("media_salarial", 0), "Média salarial")
+        media_raw = request.form.get("media_salarial", "0")
+        idade_raw = request.form.get("idade", "0")
+        descontos_raw = request.form.get("meses_desconto", "0")
+
+        media_salarial, erro = validar_numero(media_raw, "Média salarial")
         if erro:
-            log_invalid_input(request.remote_addr, "/subsidio", request.form.get("media_salarial", ""))
-            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
-            return render_template("subsidio.html", erro=erro)
+            log_invalid_input(request.remote_addr, "/subsidio", media_raw)
+            register_failed_attempt(request.remote_addr, media_raw, "/subsidio")
+            return render_template("subsidio.html", erro=erro, media_salarial=media_raw, idade=idade_raw, meses_desconto=descontos_raw)
             
-        idade, erro = validar_numero(request.form.get("idade", 0), "Idade", 16, 100)
+        idade, erro = validar_numero(idade_raw, "Idade", 16, 100)
         if erro:
-            log_invalid_input(request.remote_addr, "/subsidio", request.form.get("idade", ""))
-            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
-            return render_template("subsidio.html", erro=erro)
+            log_invalid_input(request.remote_addr, "/subsidio", idade_raw)
+            register_failed_attempt(request.remote_addr, idade_raw, "/subsidio")
+            return render_template("subsidio.html", erro=erro, media_salarial=media_salarial, idade=idade_raw, meses_desconto=descontos_raw)
         idade = int(idade)
         
-        meses_desconto, erro = validar_numero(request.form.get("meses_desconto", 0), "Meses de desconto", 0, 999)
+        meses_desconto, erro = validar_numero(descontos_raw, "Meses de desconto", 0, 999)
         if erro:
-            log_invalid_input(request.remote_addr, "/subsidio", request.form.get("meses_desconto", ""))
-            register_failed_attempt(request.remote_addr, request.form.get("bruto", ""), "/salario")
-            return render_template("subsidio.html", erro=erro)
+            log_invalid_input(request.remote_addr, "/subsidio", descontos_raw)
+            register_failed_attempt(request.remote_addr, descontos_raw, "/subsidio")
+            return render_template("subsidio.html", erro=erro, media_salarial=media_salarial, idade=idade, meses_desconto=descontos_raw)
         meses_desconto = int(meses_desconto)
 
         resultado = calcular_subsidio(media_salarial, idade, meses_desconto)
@@ -424,7 +481,12 @@ def subsidio():
             resultado_dict=resultado
         )
 
-    return render_template("subsidio.html", resultado=resultado, erro=erro)
+    return render_template("subsidio.html", 
+                           resultado=resultado, 
+                           erro=erro, 
+                           media_salarial=media_salarial, 
+                           idade=idade, 
+                           meses_desconto=meses_desconto)
 
 # =============================================================================
 # ROTAS DA API
@@ -437,28 +499,41 @@ def api_salario():
     try:
         dados = request.get_json()
         if not dados or "bruto" not in dados:
-            return jsonify({"erro": "Dados inválidos."}), 400
+            return jsonify({"erro": "Dados inválidos. O campo 'bruto' é obrigatório."}), 400
+        
+        bruto, erro = validar_numero(dados["bruto"], "bruto")
+        if erro:
+            return jsonify({"erro": erro}), 400
+
         if dados.get("regime") == "eni":
+            coef, erro = validar_numero(dados.get("coeficiente_atividade", 0.75), "coeficiente_atividade", 0, 1)
+            if erro: return jsonify({"erro": erro}), 400
+            ret, erro = validar_numero(dados.get("retencao_irs", 0.15), "retencao_irs", 0, 1)
+            if erro: return jsonify({"erro": erro}), 400
+
             resultado = calcular_salario(
-                bruto=dados["bruto"],
+                bruto=bruto,
                 regime="eni",
-                coeficiente_atividade=dados.get("coeficiente_atividade", 0.75),
-                retencao_irs=dados.get("retencao_irs", 0.15),
+                coeficiente_atividade=coef,
+                retencao_irs=ret,
                 isento_ss=dados.get("isento_ss", "nao")
             )
         else:
+            sub_alim, erro = validar_numero(dados.get("subsidio_alimentacao", 6.0), "subsidio_alimentacao")
+            if erro: return jsonify({"erro": erro}), 400
+
             resultado = calcular_salario(
-                bruto=dados["bruto"],
+                bruto=bruto,
                 regime="outrem",
-                subsidio_alimentacao=dados.get("subsidio_alimentacao", 6.0),
+                subsidio_alimentacao=sub_alim,
                 estado_civil=dados.get("estado_civil", "solteiro")
             )
-        log_security_event("API_SALARIO", request.remote_addr, f"Bruto: {dados['bruto']}")
+        log_security_event("API_SALARIO", request.remote_addr, f"Bruto: {bruto}")
         guardar_historico(tipo="salario", inputs_dict=dados, resultado_dict=resultado)
         return jsonify(resultado)
     except Exception as e:
         log_security_event("API_ERROR", request.remote_addr, str(e))
-        return jsonify({"erro": str(e)}), 500
+        return jsonify({"erro": "Erro interno no servidor."}), 500
 
 @app.route("/api/credito", methods=["POST"])
 @check_ip_block()
@@ -466,20 +541,26 @@ def api_credito():
     try:
         dados = request.get_json()
         if not dados or "valor_imovel" not in dados:
-            return jsonify({"erro": "Dados inválidos."}), 400
-        resultado = calcular_credito(
-            dados["valor_imovel"],
-            dados.get("entrada", 0),
-            dados.get("prazo_anos", 30),
-            dados.get("spread", 1.0),
-            dados.get("euribor", 3.5)
-        )
-        log_security_event("API_CREDITO", request.remote_addr, f"Valor: {dados['valor_imovel']}")
+            return jsonify({"erro": "Dados inválidos. O campo 'valor_imovel' é obrigatório."}), 400
+        
+        valor_imovel, erro = validar_numero(dados["valor_imovel"], "valor_imovel")
+        if erro: return jsonify({"erro": erro}), 400
+        entrada, erro = validar_numero(dados.get("entrada", 0), "entrada")
+        if erro: return jsonify({"erro": erro}), 400
+        prazo_anos, erro = validar_numero(dados.get("prazo_anos", 30), "prazo_anos", 1, 50)
+        if erro: return jsonify({"erro": erro}), 400
+        spread, erro = validar_numero(dados.get("spread", 1.0), "spread", 0, 100)
+        if erro: return jsonify({"erro": erro}), 400
+        euribor, erro = validar_numero(dados.get("euribor", 3.5), "euribor", -100, 100)
+        if erro: return jsonify({"erro": erro}), 400
+
+        resultado = calcular_credito(valor_imovel, entrada, int(prazo_anos), spread, euribor)
+        log_security_event("API_CREDITO", request.remote_addr, f"Valor: {valor_imovel}")
         guardar_historico(tipo="credito", inputs_dict=dados, resultado_dict=resultado)
         return jsonify(resultado)
     except Exception as e:
         log_security_event("API_ERROR", request.remote_addr, str(e))
-        return jsonify({"erro": str(e)}), 500
+        return jsonify({"erro": "Erro interno no servidor."}), 500
 
 @app.route("/api/rescisao", methods=["POST"])
 @check_ip_block()
@@ -487,23 +568,41 @@ def api_rescisao():
     try:
         dados = request.get_json()
         if not dados or "vencimento_base" not in dados:
-            return jsonify({"erro": "Dados inválidos."}), 400
+            return jsonify({"erro": "Dados inválidos. O campo 'vencimento_base' é obrigatório."}), 400
+        
+        vencimento_base, erro = validar_numero(dados["vencimento_base"], "vencimento_base")
+        if erro: return jsonify({"erro": erro}), 400
+        subsidio_alimentacao, erro = validar_numero(dados.get("subsidio_alimentacao", 6.0), "subsidio_alimentacao")
+        if erro: return jsonify({"erro": erro}), 400
+        
+        data_inicio, erro = validar_data(dados.get("data_inicio", "2020-01-01"), "data_inicio")
+        if erro: return jsonify({"erro": erro}), 400
+        data_fim, erro = validar_data(dados.get("data_fim", "2026-01-01"), "data_fim")
+        if erro: return jsonify({"erro": erro}), 400
+
+        meses_layoff, erro = validar_numero(dados.get("meses_layoff", 0), "meses_layoff", 0, 100)
+        if erro: return jsonify({"erro": erro}), 400
+        ferias_vencidas, erro = validar_numero(dados.get("ferias_vencidas", 0), "ferias_vencidas", 0, 1000)
+        if erro: return jsonify({"erro": erro}), 400
+        horas_formacao, erro = validar_numero(dados.get("horas_formacao", 0), "horas_formacao", 0, 1000)
+        if erro: return jsonify({"erro": erro}), 400
+
         resultado = calcular_rescisao(
-            vencimento_base=dados["vencimento_base"],
-            subsidio_alimentacao=dados.get("subsidio_alimentacao", 6.0),
-            data_inicio=dados.get("data_inicio", "2020-01-01"),
-            data_fim=dados.get("data_fim", "2026-01-01"),
+            vencimento_base=vencimento_base,
+            subsidio_alimentacao=subsidio_alimentacao,
+            data_inicio=data_inicio,
+            data_fim=data_fim,
             motivo=dados.get("motivo", "caducidade_termo"),
-            meses_layoff=int(dados.get("meses_layoff", 0)),
-            ferias_vencidas=int(dados.get("ferias_vencidas", 0)),
-            horas_formacao=int(dados.get("horas_formacao", 0))
+            meses_layoff=int(meses_layoff),
+            ferias_vencidas=int(ferias_vencidas),
+            horas_formacao=int(horas_formacao)
         )
-        log_security_event("API_RESCISAO", request.remote_addr, f"Vencimento: {dados['vencimento_base']}")
+        log_security_event("API_RESCISAO", request.remote_addr, f"Vencimento: {vencimento_base}")
         guardar_historico(tipo="rescisao", inputs_dict=dados, resultado_dict=resultado)
         return jsonify(resultado)
     except Exception as e:
         log_security_event("API_ERROR", request.remote_addr, str(e))
-        return jsonify({"erro": str(e)}), 500
+        return jsonify({"erro": "Erro interno no servidor."}), 500
 
 @app.route("/api/subsidio", methods=["POST"])
 @check_ip_block()
@@ -511,18 +610,22 @@ def api_subsidio():
     try:
         dados = request.get_json()
         if not dados or "media_salarial" not in dados:
-            return jsonify({"erro": "Dados inválidos."}), 400
-        resultado = calcular_subsidio(
-            dados["media_salarial"],
-            int(dados.get("idade", 30)),
-            int(dados.get("meses_desconto", 12))
-        )
-        log_security_event("API_SUBSIDIO", request.remote_addr, f"Média: {dados['media_salarial']}")
+            return jsonify({"erro": "Dados inválidos. O campo 'media_salarial' é obrigatório."}), 400
+        
+        media_salarial, erro = validar_numero(dados["media_salarial"], "media_salarial")
+        if erro: return jsonify({"erro": erro}), 400
+        idade, erro = validar_numero(dados.get("idade", 30), "idade", 16, 100)
+        if erro: return jsonify({"erro": erro}), 400
+        meses_desconto, erro = validar_numero(dados.get("meses_desconto", 12), "meses_desconto", 0, 999)
+        if erro: return jsonify({"erro": erro}), 400
+
+        resultado = calcular_subsidio(media_salarial, int(idade), int(meses_desconto))
+        log_security_event("API_SUBSIDIO", request.remote_addr, f"Média: {media_salarial}")
         guardar_historico(tipo="subsidio", inputs_dict=dados, resultado_dict=resultado)
         return jsonify(resultado)
     except Exception as e:
         log_security_event("API_ERROR", request.remote_addr, str(e))
-        return jsonify({"erro": str(e)}), 500
+        return jsonify({"erro": "Erro interno no servidor."}), 500
 
 @app.route("/api/health", methods=["GET"])
 def health_check():
@@ -545,11 +648,11 @@ def api_ine_inflacao():
 @app.route("/api/carros/isv", methods=["GET"])
 def api_carros_isv():
     try:
-        co2 = request.args.get('co2', type=float)
-        cilindrada = request.args.get('cilindrada', type=float)
+        co2 = request.args.get('co2', type=int)
+        cilindrada = request.args.get('cilindrada', type=int)
         ano = request.args.get('ano', type=int)
         
-        if not all([co2, cilindrada, ano]):
+        if co2 is None or cilindrada is None or ano is None:
             return jsonify({"erro": "Parâmetros obrigatórios: co2, cilindrada, ano"}), 400
         
         resultado = calcular_isv(co2, cilindrada, ano)
@@ -558,35 +661,25 @@ def api_carros_isv():
         return jsonify({"erro": str(e)}), 500
 
 @app.route("/api/carros/iuc", methods=["GET"])
-@app.route("/api/carros/iuc", methods=["GET"])
-@app.route("/api/carros/iuc", methods=["GET"])
 def api_carros_iuc():
     try:
-        co2 = request.args.get("co2", type=float)
+        co2 = request.args.get("co2", type=int)
+        cilindrada = request.args.get("cilindrada", type=int)
         ano = request.args.get("ano", type=int)
+        combustivel = request.args.get("combustivel", type=str, default="gasolina")
         
-        if not all([co2, ano]):
-            return jsonify({"erro": "Parâmetros obrigatórios: co2, ano"}), 400
+        if co2 is None or cilindrada is None or ano is None:
+            return jsonify({"erro": "Parâmetros obrigatórios: co2, cilindrada, ano"}), 400
         
-        resultado = calcular_iuc(co2, ano)
-        if resultado and "erro" in resultado:
-            resultado = calcular_iuc_fallback(co2, ano)
-        return jsonify(resultado)
-    except Exception as e:
-        return jsonify({"erro": str(e)}), 500
+        resultado = calcular_iuc(co2, cilindrada, ano, combustivel)
         
-        resultado = calcular_iuc(co2, ano)
         if "erro" in resultado:
-            resultado = calcular_iuc_fallback(co2, ano)
+            return jsonify(resultado), 400
+            
         return jsonify(resultado)
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
         
-        resultado = calcular_iuc(co2, ano)
-        return jsonify(resultado)
-    except Exception as e:
-        return jsonify({"erro": str(e)}), 500
-
 # =============================================================================
 # ROTAS PDF
 # =============================================================================
@@ -698,27 +791,48 @@ def subsidio_pdf():
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
+@app.route("/iuc/pdf", methods=["GET"])
+@limiter.limit("5 per minute")
+def iuc_pdf():
+    try:
+        ano = request.args.get("ano", type=int)
+        cilindrada = request.args.get("cilindrada", type=int)
+        co2 = request.args.get("co2", type=int)
+        combustivel = request.args.get("combustivel", type=str, default="gasolina")
+
+        if not ano or not cilindrada or co2 is None:
+            return jsonify({"erro": "Parâmetros obrigatórios em falta: ano, cilindrada, co2"}), 400
+
+        resultado = calcular_iuc(co2, cilindrada, ano, combustivel)
+        inputs = {
+            "Ano do Veículo": str(ano),
+            "Cilindrada": f"{cilindrada} cc",
+            "Emissões CO₂": f"{co2} g/km",
+            "Combustível": combustivel.capitalize()
+        }
+
+        pdf = gerar_pdf_resultado("Imposto Único de Circulação (IUC)", inputs, resultado)
+        if pdf:
+            response = make_response(pdf)
+            response.headers["Content-Type"] = "application/pdf"
+            response.headers["Content-Disposition"] = f"attachment; filename=iuc_{ano}_{cilindrada}.pdf"
+            return response
+        else:
+            return jsonify({"erro": "PDF não disponível", "dados": resultado}), 500
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
 # =============================================================================
-# TRATAMENTO DE ERROS
+# TRATEMENTO DE ERROS
 # =============================================================================
-@app.errorhandler(500)
-def internal_error(error):
+@app.errorhandler(Exception)
+def handle_exception(e):
+    log_security_event("INTERNAL_SERVER_ERROR", request.remote_addr, str(e))
     return render_template("500.html"), 500
 
 @app.errorhandler(404)
 def not_found(error):
     return "<h1>404 - Página não encontrada</h1><p><a href='/'>Voltar ao início</a></p>", 404
-
-# =============================================================================
-# INICIALIZAÇÃO DO SERVIDOR
-# =============================================================================
-if __name__ == "__main__":
-    print("=" * 60)
-    print("  Calculadoras Portugal 2026")
-    print("  Servidor Flask a iniciar...")
-    print("=" * 60)
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=False, host="0.0.0.0", port=port)
 
 # =============================================================================
 # ROTAS PARA AS NOVAS CALCULADORAS
@@ -733,17 +847,16 @@ def inflacao():
 
     if request.method == "POST":
         try:
-            # Usar a função get_inflacao() do utils.ine
-            from utils.ine import get_inflacao
             resultado = get_inflacao()
             if "erro" in resultado:
                 erro = resultado["erro"]
                 resultado = None
-            log_security_event("CALCULO_INFLACAO", request.remote_addr, "Consulta inflação")
+            else:
+                log_security_event("CALCULO_INFLACAO", request.remote_addr, "Consulta inflação")
+                guardar_historico(tipo="inflacao", inputs_dict={}, resultado_dict=resultado)
         except Exception as e:
             erro = str(e)
 
-    # Se for GET, mostrar apenas a página sem resultados
     return render_template("inflacao.html", resultado=resultado, erro=erro)
 
 @app.route("/isv", methods=["GET", "POST"])
@@ -762,7 +875,6 @@ def isv():
             cilindrada = float(request.form.get("cilindrada", 2000))
             co2 = float(request.form.get("co2", 150))
 
-            # Validar valores
             if ano < 1990 or ano > 2026:
                 erro = "Ano deve estar entre 1990 e 2026"
             elif cilindrada <= 0:
@@ -771,9 +883,17 @@ def isv():
                 erro = "CO₂ deve ser positivo"
 
             if not erro:
-                from utils.carros import calcular_isv
-                resultado = calcular_isv(co2, cilindrada, ano)
-                log_security_event("CALCULO_ISV", request.remote_addr, f"Ano:{ano} CC:{cilindrada} CO2:{co2}")
+                res_isv = calcular_isv(co2, cilindrada, ano)
+                if "erro" in res_isv:
+                    erro = res_isv["erro"]
+                else:
+                    resultado = {"isv": res_isv}
+                    log_security_event("CALCULO_ISV", request.remote_addr, f"Ano:{ano} CC:{cilindrada} CO2:{co2}")
+                    guardar_historico(
+                        tipo="isv",
+                        inputs_dict={"ano": ano, "cilindrada": cilindrada, "co2": co2},
+                        resultado_dict=resultado
+                    )
         except ValueError:
             erro = "Valores inválidos. Por favor, insira números."
         except Exception as e:
@@ -789,35 +909,45 @@ def iuc():
     resultado = None
     ano = 2020
     co2 = 150
+    cilindrada = 1500
+    combustivel = "gasolina"
 
     if request.method == "POST":
         try:
             ano = int(request.form.get("ano", 2020))
-            co2 = float(request.form.get("co2", 150))
+            co2 = int(request.form.get("co2", 150))
+            cilindrada = int(request.form.get("cilindrada", 1500))
+            combustivel = request.form.get("combustivel", "gasolina")
 
             if ano < 1990 or ano > 2026:
                 erro = "Ano deve estar entre 1990 e 2026"
             elif co2 < 0:
                 erro = "CO₂ deve ser positivo"
+            elif cilindrada <= 0:
+                erro = "Cilindrada deve ser positiva"
 
             if not erro:
-                from utils.carros import calcular_iuc, calcular_iuc_fallback
-                resultado = calcular_iuc(co2, ano)
+                resultado = calcular_iuc(co2, cilindrada, ano, combustivel)
                 if "erro" in resultado:
-                    resultado = calcular_iuc_fallback(co2, ano)
-                    resultado["nota"] = resultado.get("nota", "Valor estimado (API externa indisponível)")
-                log_security_event("CALCULO_IUC", request.remote_addr, f"Ano:{ano} CO2:{co2}")
+                    erro = resultado["erro"]
+                    resultado = None
+                else:
+                    log_security_event("CALCULO_IUC", request.remote_addr, f"Ano:{ano} CO2:{co2} CC:{cilindrada} Combustivel:{combustivel}")
+                    guardar_historico(
+                        tipo="iuc",
+                        inputs_dict={"ano": ano, "co2": co2, "cilindrada": cilindrada, "combustivel": combustivel},
+                        resultado_dict=resultado
+                    )
         except ValueError:
             erro = "Valores inválidos. Por favor, insira números."
         except Exception as e:
             erro = str(e)
 
-    return render_template("iuc.html", resultado=resultado, erro=erro, ano=ano, co2=co2)
+    return render_template("iuc.html", resultado=resultado, erro=erro, ano=ano, co2=co2, cilindrada=cilindrada, combustivel=combustivel)
 
 # =============================================================================
 # ROTA - SIMULADOR DE POUPANÇA
 # =============================================================================
-from utils.poupanca import calcular_poupanca
 
 @app.route("/poupanca", methods=["GET", "POST"])
 @limiter.limit("5 per minute")
@@ -849,6 +979,16 @@ def poupanca():
             if not erro:
                 resultado = calcular_poupanca(capital_inicial, contribuicao_mensal, taxa_juro, periodo)
                 log_security_event("CALCULO_POUPANCA", request.remote_addr, f"Capital:{capital_inicial} Juro:{taxa_juro} Anos:{periodo}")
+                guardar_historico(
+                    tipo="poupanca",
+                    inputs_dict={
+                        "capital_inicial": capital_inicial,
+                        "contribuicao_mensal": contribuicao_mensal,
+                        "taxa_juro": taxa_juro,
+                        "periodo": periodo
+                    },
+                    resultado_dict=resultado
+                )
         except ValueError:
             erro = "Valores inválidos. Por favor, insira números."
         except Exception as e:
@@ -892,3 +1032,14 @@ def poupanca_pdf():
             return jsonify({"erro": "PDF não disponível", "dados": resultado}), 500
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
+
+# =============================================================================
+# INICIALIZAÇÃO DO SERVIDOR
+# =============================================================================
+if __name__ == "__main__":
+    print("=" * 60)
+    print("  Calculadoras Portugal 2026")
+    print("  Servidor Flask a iniciar...")
+    print("=" * 60)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)

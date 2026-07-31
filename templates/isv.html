@@ -34,35 +34,33 @@
             <button type="submit" class="btn-main">Calcular ISV</button>
         </form>
 
-        {% if resultado %}
+{% if resultado and resultado.isv %}
         <div class="resultados visible" style="margin-top: 25px;">
             <div class="grid-res">
                 <div class="res-card">
                     <small>ISV Total</small>
-                    <div class="big-val">€{{ "%.2f"|format(resultado.isv.isv) if resultado.isv else resultado.isv }}</div>
+                    <!-- Usa .get() ou default para prevenir o erro se a chave exata falhar -->
+                    <div class="big-val">€{{ "%.2f"|format(resultado.isv.isv | default(0) | float) }}</div>
                 </div>
                 <div class="res-card">
                     <small>Componente Ambiental</small>
-                    <div class="big-val" style="color: #3b82f6;">€{{ "%.2f"|format(resultado.isv.comp_ambiental) if resultado.isv else 0 }}</div>
+                    <div class="big-val" style="color: #3b82f6;">€{{ "%.2f"|format(resultado.isv.comp_ambiental | default(resultado.isv.componente_ambiental) | default(0) | float) }}</div>
                 </div>
             </div>
 
             <div class="info-extra">
-                <p><strong>Componente Cilindrada:</strong> €{{ "%.2f"|format(resultado.isv.comp_cilindrada) if resultado.isv else 0 }}</p>
-                <p><strong>Redução por idade:</strong> {{ (resultado.isv.age_reduction_pct if resultado.isv else 0)|int }}%</p>
-                <p><strong>Anos de idade:</strong> {{ resultado.isv.age_years if resultado.isv else 0 }}</p>
-                <p><strong>Tabela:</strong> {{ resultado.isv.table if resultado.isv else 'N/A' }}</p>
-                {% if resultado.isv and resultado.isv.note %}
-                <p><strong>Nota:</strong> {{ resultado.isv.note }}</p>
+                <p><strong>Componente Cilindrada:</strong> €{{ "%.2f"|format(resultado.isv.comp_cilindrada | default(resultado.isv.componente_cilindrada) | default(0) | float) }}</p>
+                <p><strong>Redução por idade:</strong> {{ (resultado.isv.age_reduction_pct | default(resultado.isv.desconto_idade) | default(0))|int }}%</p>
+                <p><strong>Anos de idade:</strong> {{ resultado.isv.age_years | default(resultado.isv.anos) | default(0) }}</p>
+                <p><strong>Tabela:</strong> {{ resultado.isv.table | default(resultado.isv.tabela) | default('N/A') }}</p>
+                
+                {% if resultado.isv.note or resultado.isv.nota %}
+                <p><strong>Nota:</strong> {{ resultado.isv.note | default(resultado.isv.nota) }}</p>
                 {% endif %}
+                
                 {% if resultado.erro %}
                 <p style="color:#c00;"><strong>Erro:</strong> {{ resultado.erro }}</p>
                 {% endif %}
-            </div>
-
-            <div class="bmc-container" style="text-align: center; margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 10px; border: 1px solid #059669;">
-                <p style="margin: 0 0 10px 0; color: #374151; font-size: 0.95rem;">Esta calculadora foi útil?</p>
-                <a href="https://www.buymeacoffee.com/ondoreoku" target="_blank" style="display: inline-block; background: #059669; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">Paga-me um café</a>
             </div>
         </div>
         {% endif %}

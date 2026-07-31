@@ -9,7 +9,8 @@
         <p class="subtitulo">Calcula a indemnização no fim do contrato de trabalho</p>
 
         <section class="form-card">
-            <form method="POST" action="/rescisao">
+            <!-- Adicionado o ID ao form -->
+            <form id="form-rescisao" method="POST" action="/rescisao">
             {% if erro %}
             <div style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 ⚠️ {{ erro }}
@@ -18,27 +19,27 @@
                 <div class="grid">
                     <div class="input-group">
                         <label>Vencimento Base Mensal (€)</label>
-                        <input type="number" name="vencimento_base" step="0.01" min="0" required 
-                               value="{{ vencimento_base or 1200 }}" placeholder="Ex: 1200.00">
+                        <input type="number" name="vencimento_base" id="vencimento_base" step="0.01" min="0" required 
+                               value="1200" placeholder="Ex: 1200.00">
                     </div>
                     <div class="input-group">
                         <label>Subsídio Alimentação (€/dia)</label>
-                        <input type="number" name="subsidio_alimentacao" step="0.01" min="0" 
-                               value="{{ subsidio_alimentacao or 6.0 }}" placeholder="Ex: 6.00">
+                        <input type="number" name="subsidio_alimentacao" id="subsidio_alimentacao" step="0.01" min="0" 
+                               value="6.0" placeholder="Ex: 6.00">
                     </div>
                     <div class="input-group">
                         <label>Data de Início</label>
-                        <input type="date" name="data_inicio" required 
-                               value="{{ data_inicio or '2020-01-15' }}">
+                        <input type="date" name="data_inicio" id="data_inicio" required 
+                               value="2020-01-15">
                     </div>
                     <div class="input-group">
                         <label>Data de Fim</label>
-                        <input type="date" name="data_fim" required 
-                               value="{{ data_fim or '2026-07-16' }}">
+                        <input type="date" name="data_fim" id="data_fim" required 
+                               value="2026-07-16">
                     </div>
                     <div class="input-group full-width">
                         <label>Motivo da Rescisão</label>
-                        <select name="motivo">
+                        <select name="motivo" id="motivo">
                             <option value="caducidade_termo" {% if motivo == 'caducidade_termo' %}selected{% endif %}>Caducidade de Termo</option>
                             <option value="despedimento_coletivo" {% if motivo == 'despedimento_coletivo' %}selected{% endif %}>Despedimento Coletivo</option>
                             <option value="justa_causa_trabalhador" {% if motivo == 'justa_causa_trabalhador' %}selected{% endif %}>Justa Causa (Trabalhador)</option>
@@ -47,25 +48,41 @@
                     </div>
                     <div class="input-group">
                         <label>Meses em Lay-off</label>
-                        <input type="number" name="meses_layoff" min="0" 
-                               value="{{ meses_layoff or 0 }}" placeholder="Ex: 0">
+                        <input type="number" name="meses_layoff" id="meses_layoff" min="0" 
+                               value="0" placeholder="Ex: 0">
                     </div>
                     <div class="input-group">
                         <label>Férias Vencidas (dias)</label>
-                        <input type="number" name="ferias_vencidas" min="0" 
-                               value="{{ ferias_vencidas or 0 }}" placeholder="Ex: 5">
+                        <input type="number" name="ferias_vencidas" id="ferias_vencidas" min="0" 
+                               value="0" placeholder="Ex: 5">
                     </div>
                     <div class="input-group full-width">
                         <label>Horas de Formação</label>
-                        <input type="number" name="horas_formacao" min="0" 
-                               value="{{ horas_formacao or 0 }}" placeholder="Ex: 10">
+                        <input type="number" name="horas_formacao" id="horas_formacao" min="0" 
+                               value="0" placeholder="Ex: 10">
                     </div>
                 </div>
                 <button type="submit" class="btn-main">Calcular Rescisão</button>
             </form>
+            
             <div style="text-align:center;margin-top:15px;">
-                <a href="/rescisao/pdf?vencimento_base={{ vencimento_base }}/rescisao/pdf?vencimento_base=1200subsidio_alimentacao={{ subsidio_alimentacao }}" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">📄 Baixar PDF</a>
-                <span style="color:#6b7280;font-size:0.8rem;margin-left:10px;">(exemplo com 1200€)</span>
+                {% if resultado %}
+                    <!-- Botão gerido pelo JS -->
+                    <a href="#" 
+                       id="btn-pdf-rescisao" 
+                       target="_blank" 
+                       style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
+                       📄 Baixar PDF dos Resultados
+                    </a>
+                {% else %}
+                    <!-- Link corrigido para o exemplo padrão -->
+                    <a href="/rescisao/pdf?vencimento_base=1200&subsidio_alimentacao=6.0&data_inicio=2020-01-15&data_fim=2026-07-16&motivo=caducidade_termo&meses_layoff=0&ferias_vencidas=0&horas_formacao=0" 
+                       target="_blank" 
+                       style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
+                       📄 Baixar PDF Exemplo
+                    </a>
+                    <span style="color:#6b7280;font-size:0.8rem;margin-left:10px;">(exemplo padrão com 1200€)</span>
+                {% endif %}
             </div>
 
             {% if resultado %}
@@ -98,4 +115,52 @@
             {% endif %}
         </section>
     </div>
+
+    <script>
+        // Guardar os dados no sessionStorage quando o formulário é submetido
+        document.getElementById('form-rescisao').addEventListener('submit', function() {
+            sessionStorage.setItem('resc_venc', document.getElementById('vencimento_base').value);
+            sessionStorage.setItem('resc_sub_alim', document.getElementById('subsidio_alimentacao').value);
+            sessionStorage.setItem('resc_d_inicio', document.getElementById('data_inicio').value);
+            sessionStorage.setItem('resc_d_fim', document.getElementById('data_fim').value);
+            sessionStorage.setItem('resc_motivo', document.getElementById('motivo').value);
+            sessionStorage.setItem('resc_layoff', document.getElementById('meses_layoff').value);
+            sessionStorage.setItem('resc_ferias', document.getElementById('ferias_vencidas').value);
+            sessionStorage.setItem('resc_formacao', document.getElementById('horas_formacao').value);
+        });
+
+        // Repor os dados e configurar o botão PDF quando a página carrega
+        window.addEventListener('DOMContentLoaded', function() {
+            if (sessionStorage.getItem('resc_venc')) document.getElementById('vencimento_base').value = sessionStorage.getItem('resc_venc');
+            if (sessionStorage.getItem('resc_sub_alim')) document.getElementById('subsidio_alimentacao').value = sessionStorage.getItem('resc_sub_alim');
+            if (sessionStorage.getItem('resc_d_inicio')) document.getElementById('data_inicio').value = sessionStorage.getItem('resc_d_inicio');
+            if (sessionStorage.getItem('resc_d_fim')) document.getElementById('data_fim').value = sessionStorage.getItem('resc_d_fim');
+            if (sessionStorage.getItem('resc_motivo')) document.getElementById('motivo').value = sessionStorage.getItem('resc_motivo');
+            if (sessionStorage.getItem('resc_layoff')) document.getElementById('meses_layoff').value = sessionStorage.getItem('resc_layoff');
+            if (sessionStorage.getItem('resc_ferias')) document.getElementById('ferias_vencidas').value = sessionStorage.getItem('resc_ferias');
+            if (sessionStorage.getItem('resc_formacao')) document.getElementById('horas_formacao').value = sessionStorage.getItem('resc_formacao');
+
+            // Configuração do link dinâmico para o PDF
+            const btnPdf = document.getElementById('btn-pdf-rescisao');
+            if (btnPdf) {
+                btnPdf.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const venc = document.getElementById('vencimento_base').value;
+                    const subAlim = document.getElementById('subsidio_alimentacao').value;
+                    const dInicio = document.getElementById('data_inicio').value;
+                    const dFim = document.getElementById('data_fim').value;
+                    const motivo = document.getElementById('motivo').value;
+                    const layoff = document.getElementById('meses_layoff').value;
+                    const ferias = document.getElementById('ferias_vencidas').value;
+                    const formacao = document.getElementById('horas_formacao').value;
+
+                    // Constrói o URL com todos os parâmetros embutidos
+                    let urlFinal = `/rescisao/pdf?vencimento_base=${venc}&subsidio_alimentacao=${subAlim}&data_inicio=${dInicio}&data_fim=${dFim}&motivo=${motivo}&meses_layoff=${layoff}&ferias_vencidas=${ferias}&horas_formacao=${formacao}`;
+                    
+                    window.open(urlFinal, '_blank');
+                });
+            }
+        });
+    </script>
 {% endblock %}
