@@ -44,9 +44,17 @@
                 </div>
                 <button type="submit" class="btn-main">Calcular Prestação</button>
             </form>
+
             <div style="text-align:center;margin-top:15px;">
-                <a href="/credito/pdf?valor_imovel={{ valor_imovel }}/credito/pdf?valor_imovel=200000&entrada=40000&prazo_anos=30entrada={{ entrada }}/credito/pdf?valor_imovel=200000&entrada=40000&prazo_anos=30prazo_anos={{ prazo_anos }}/credito/pdf?valor_imovel=200000&entrada=40000&prazo_anos=30spread={{ spread }}/credito/pdf?valor_imovel=200000&entrada=40000&prazo_anos=30euribor={{ euribor }}" target="_blank" style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">📄 Baixar PDF</a>
-                <span style="color:#6b7280;font-size:0.8rem;margin-left:10px;">(exemplo com 200.000€)</span>
+                {% if resultado %}
+                    <!-- O botão só aparece após a simulação e gera o URL dinamicamente via JS -->
+                    <a href="#" 
+                       id="btn-pdf-credito"
+                       target="_blank" 
+                       style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
+                       📄 Baixar PDF dos Resultados
+                    </a>
+                {% endif %}
             </div>
 
             {% if resultado %}
@@ -109,4 +117,27 @@
             {% endif %}
         </section>
     </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            const btnPdf = document.getElementById('btn-pdf-credito');
+            if (btnPdf) {
+                btnPdf.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Captura os valores diretamente dos inputs do formulário pelo atributo 'name'
+                    const valorImovel = document.getElementsByName('valor_imovel')[0].value;
+                    const entrada = document.getElementsByName('entrada')[0].value;
+                    const prazoAnos = document.getElementsByName('prazo_anos')[0].value;
+                    const spread = document.getElementsByName('spread')[0].value;
+                    const euribor = document.getElementsByName('euribor')[0].value;
+
+                    // Constrói o URL limpo e correto para a rota do Flask
+                    let urlFinal = `/credito/pdf?valor_imovel=${valorImovel}&entrada=${entrada}&prazo_anos=${prazoAnos}&spread=${spread}&euribor=${euribor}`;
+                    
+                    window.open(urlFinal, '_blank');
+                });
+            }
+        });
+    </script>
 {% endblock %}

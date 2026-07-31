@@ -12,8 +12,8 @@
     --text-light: #9ca3af;
     --border: #e5e7eb;
     --white: #ffffff;
-    --shadow-sm: 0 4px 6px rgba(0,0,0,0.05);
-    --shadow-md: 0 12px 24px rgba(0,0,0,0.12);
+    --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 12px 24px rgba(0, 0, 0, 0.12);
     --radius: 12px;
     --radius-sm: 10px;
     --radius-xs: 8px;
@@ -117,6 +117,8 @@ main.home > h1 {
     color: var(--text-muted);
     margin-bottom: 50px;
     font-size: 1.1rem;
+    text-align: center;
+    display: block;
 }
 
 .sugestoes {
@@ -241,7 +243,7 @@ main.home > h1 {
 }
 
 .noticia:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .noticia-categoria {
@@ -490,6 +492,7 @@ footer a:hover {
     .sugestoes {
         grid-template-columns: repeat(2, 1fr);
     }
+
     .noticias-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -500,30 +503,37 @@ footer a:hover {
     .noticias-grid {
         grid-template-columns: 1fr;
     }
+
     .subtitulo {
         margin-bottom: 30px;
     }
+
     .card {
         height: auto;
         min-height: 160px;
     }
+
     .grid,
     .sub-grid,
     .grid-res {
         grid-template-columns: 1fr;
     }
+
     .full-width,
     .sub-grid {
         grid-column: span 1;
     }
+
     nav {
         flex-direction: column;
         gap: 10px;
     }
+
     nav ul {
         flex-wrap: wrap;
         justify-content: center;
     }
+
     .noticias-header {
         flex-direction: column;
         gap: 10px;
@@ -840,29 +850,6 @@ footer a:hover {
     color: #e8e8e8 !important;
 }
 
-.dark-mode .bloqueio-container h1 {
-    color: #f87171 !important;
-}
-
-.dark-mode .bloqueio-container p {
-    color: #c8c8d8 !important;
-}
-
-.dark-mode .bloqueio-box {
-    background-color: #2d2d44 !important;
-    border-color: #4a4a6a !important;
-    color: #e8e8e8 !important;
-}
-
-.dark-mode .bloqueio-box strong {
-    color: #e8e8e8 !important;
-}
-
-.dark-mode .bloqueio-box p {
-    color: #c8c8d8 !important;
-}
-
-/* DARK MODE - PÁGINA DE BLOQUEIO */
 .dark-mode .bloqueio-container h1 {
     color: #f87171 !important;
 }

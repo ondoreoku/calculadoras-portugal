@@ -822,6 +822,41 @@ def iuc_pdf():
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
+@app.route("/isv/pdf", methods=["GET"])
+@limiter.limit("5 per minute")
+def isv_pdf():
+    try:
+        ano = request.args.get("ano", type=int)
+        # Captura como float primeiro para aceitar o formato vindo do JS, e depois converte para int
+        cilindrada_raw = request.args.get("cilindrada", type=float)
+        co2_raw = request.args.get("co2", type=float)
+
+        if not ano or cilindrada_raw is None or co2_raw is None:
+            return jsonify({"erro": "Parâmetros obrigatórios em falta: ano, cilindrada, co2"}), 400
+
+        cilindrada = int(cilindrada_raw)
+        co2 = int(co2_raw)
+
+        # Executa a função interna de cálculo
+        resultado = calcular_isv(ano=ano, cilindrada=cilindrada, co2=co2)
+        
+        inputs = {
+            "Ano do Veículo": str(ano),
+            "Cilindrada": f"{cilindrada} cc",
+            "Emissões CO₂": f"{co2} g/km"
+        }
+
+        pdf = gerar_pdf_resultado("Imposto Sobre Veículos (ISV)", inputs, resultado)
+        if pdf:
+            response = make_response(pdf)
+            response.headers["Content-Type"] = "application/pdf"
+            response.headers["Content-Disposition"] = f"attachment; filename=isv_{ano}_{cilindrada}.pdf"
+            return response
+        else:
+            return jsonify({"erro": "PDF não disponível", "dados": resultado}), 500
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+
 # =============================================================================
 # TRATEMENTO DE ERROS
 # =============================================================================

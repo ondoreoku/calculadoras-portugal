@@ -67,17 +67,28 @@ def calcular_isv(co2, cilindrada, ano):
     elif idade == 4: desconto = 0.35
     elif idade == 5: desconto = 0.43
     elif idade <= 7: desconto = 0.52
-    elif idade <= 10: desconto = 0.60
+    elif idade <= 10: desconto = 0.60  # <--- Corrigido de "discount" para "desconto"
     else: desconto = 0.70
 
-    isv_total = (componente_cc + componente_co2) * (1 - desconto)
+    total_bruto = componente_cc + componente_co2
+    isv_total = total_bruto * (1 - desconto)
+    valor_poupado = total_bruto * desconto
 
     return {
         "isv": float(round(isv_total, 2)),
+        "isv_bruto": float(round(total_bruto, 2)),
         "componente_cilindrada": float(round(componente_cc, 2)),
         "componente_co2": float(round(componente_co2, 2)),
+        
+        "componente_ambiental": float(round(componente_co2, 2)),
         "desconto_idade": float(round(desconto * 100, 1)),
-        "nota": "Cálculo local estimado baseado nas tabelas OE2026."
+        "desconto_idade_euros": float(round(valor_poupado, 2)),
+        "reducao_idade": float(round(desconto * 100, 1)),
+        "anos_idade": int(idade),
+        "idade": int(idade),
+        "tabela": "A",
+        
+        "nota": f"Cálculo local baseado no OE2026. Inclui {int(desconto * 100)}% de desconto por idade ({idade} anos)."
     }
 
 def calcular_iuc(co2, cilindrada, ano, combustivel="gasolina"):

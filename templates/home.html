@@ -4,100 +4,102 @@
 {% block main_class %}home{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h1>Escolhe uma Calculadora</h1>
-        <p class="subtitulo">Ferramentas financeiras para Portugal em 2026</p>
+<div class="container">
+    <h1>Escolhe uma Calculadora</h1>
+    <p class="subtitulo">Ferramentas financeiras para Portugal em 2026</p>
 
-        <section class="sugestoes">
-            <a href="/salario" class="card-link">
-                <div class="card">
-                    <h2>Salário Líquido</h2>
-                    <p>Calcula o teu salário após descontos de IRS e Segurança Social</p>
-                    <span class="card-acao">Calcular &rarr;</span>
-                </div>
-            </a>
-            <a href="/credito" class="card-link">
-                <div class="card">
-                    <h2>Crédito Habitação</h2>
-                    <p>Calcula a prestação mensal do teu empréstimo bancário</p>
-                    <span class="card-acao">Calcular &rarr;</span>
-                </div>
-            </a>
-            <a href="/rescisao" class="card-link">
-                <div class="card">
-                    <h2>Rescisão</h2>
-                    <p>Calcula a indemnização no fim do contrato de trabalho</p>
-                    <span class="card-acao">Calcular &rarr;</span>
-                </div>
-            </a>
-            <a href="/subsidio" class="card-link">
-                <div class="card">
-                    <h2>Subsídio de Desemprego</h2>
-                    <p>Calcula o valor do apoio em caso de desemprego</p>
-                    <span class="card-acao">Calcular &rarr;</span>
-                </div>
-            </a>
-            <a href="/inflacao" class="card-link">
-                <div class="card">
-                    <h2>Inflação</h2>
-                    <p>Consulta a taxa de inflação em Portugal (IPC) -- dados do INE</p>
-                    <span class="card-acao">Consultar &rarr;</span>
-                </div>
-            </a>
-            <a href="/isv" class="card-link">
-                <div class="card">
-                    <h2>ISV</h2>
-                    <p>Calcula o Imposto Sobre Veículos com base em ano, cilindrada e CO2</p>
-                    <span class="card-acao">Calcular &rarr;</span>
-                </div>
-            </a>
-            <a href="/iuc" class="card-link">
-                <div class="card">
-                    <h2>IUC</h2>
-                    <p>Calcula o Imposto Único de Circulação com base em ano e CO2</p>
-                    <span class="card-acao">Calcular &rarr;</span>
-                </div>
-            </a>
-            <a href="/poupanca" class="card-link">
-                <div class="card">
-                    <h2>Poupança</h2>
-                    <p>Simula o crescimento do teu dinheiro com juros compostos</p>
-                    <span class="card-acao">Simular &rarr;</span>
-                </div>
-            </a>
-        </section>
+    <section class="sugestoes">
+        <a href="/salario" class="card-link">
+            <div class="card">
+                <h2>Salário Líquido</h2>
+                <p>Calcula o teu salário após descontos de IRS e Segurança Social</p>
+                <span class="card-acao">Calcular &rarr;</span>
+            </div>
+        </a>
+        <a href="/credito" class="card-link">
+            <div class="card">
+                <h2>Crédito Habitação</h2>
+                <p>Calcula a prestação mensal do teu empréstimo bancário</p>
+                <span class="card-acao">Calcular &rarr;</span>
+            </div>
+        </a>
+        <a href="/rescisao" class="card-link">
+            <div class="card">
+                <h2>Rescisão</h2>
+                <p>Calcula a indemnização no fim do contrato de trabalho</p>
+                <span class="card-acao">Calcular &rarr;</span>
+            </div>
+        </a>
+        <a href="/subsidio" class="card-link">
+            <div class="card">
+                <h2>Subsídio de Desemprego</h2>
+                <p>Calcula o valor do apoio em caso de desemprego</p>
+                <span class="card-acao">Calcular &rarr;</span>
+            </div>
+        </a>
+        <a href="/inflacao" class="card-link">
+            <div class="card">
+                <h2>Inflação</h2>
+                <p>Consulta a taxa de inflação em Portugal (IPC) -- dados do INE</p>
+                <span class="card-acao">Consultar &rarr;</span>
+            </div>
+        </a>
+        <a href="/isv" class="card-link">
+            <div class="card">
+                <h2>ISV</h2>
+                <p>Calcula o Imposto Sobre Veículos com base em ano, cilindrada e CO2</p>
+                <span class="card-acao">Calcular &rarr;</span>
+            </div>
+        </a>
+        <a href="/iuc" class="card-link">
+            <div class="card">
+                <h2>IUC</h2>
+                <p>Calcula o Imposto Único de Circulação com base em ano e CO2</p>
+                <span class="card-acao">Calcular &rarr;</span>
+            </div>
+        </a>
+        <a href="/poupanca" class="card-link">
+            <div class="card">
+                <h2>Poupança</h2>
+                <p>Simula o crescimento do teu dinheiro com juros compostos</p>
+                <span class="card-acao">Simular &rarr;</span>
+            </div>
+        </a>
+    </section>
 
-        <section class="noticias">
-            <div class="noticias-header">
-                <h2>Notícias Relevantes</h2>
-                <a href="/atualizar_noticias" class="atualizar-link">Atualizar feed</a>
-            </div>
-            <div class="noticias-grid">
-                {% for noticia in noticias %}
-                <article class="noticia">
-                    <span class="noticia-categoria">{{ noticia.categoria }}</span>
-                    <h3>
-                        <a href="{{ noticia.url }}" class="noticia-titulo-link" target="_blank" rel="noopener noreferrer">
-                            {{ noticia.titulo }}
-                        </a>
-                    </h3>
-                    <p>{{ noticia.resumo }}</p>
-                    <div class="noticia-rodape">
-                        <span class="noticia-meta">
-                            {{ noticia.fonte }}
-                            <span class="separador">&middot;</span>
-                            {{ noticia.data }}
-                        </span>
-                        <a href="{{ noticia.url }}" class="ler-mais" target="_blank" rel="noopener noreferrer">Ler mais &rarr;</a>
-                    </div>
-                </article>
-                {% else %}
-                <article class="noticia noticia-vazia">
-                    <p>Sem notícias disponíveis de momento.
-                    <a href="/atualizar_noticias">Atualizar feed</a></p>
-                </article>
-                {% endfor %}
-            </div>
-        </section>
-    </div>
+    <section class="noticias">
+        <div class="noticias-header">
+            <h2>Notícias Relevantes</h2>
+            <a href="/atualizar_noticias" class="atualizar-link">Atualizar feed</a>
+        </div>
+        <div class="noticias-grid">
+            {% for noticia in noticias %}
+            <article class="noticia">
+                <span class="noticia-categoria">{{ noticia.categoria }}</span>
+                <h3>
+                    <a href="{{ noticia.url }}" class="noticia-titulo-link" target="_blank" rel="noopener noreferrer">
+                        {{ noticia.titulo }}
+                    </a>
+                </h3>
+                <p>{{ noticia.resumo }}</p>
+                <div class="noticia-rodape">
+                    <span class="noticia-meta">
+                        {{ noticia.fonte }}
+                        <span class="separador">&middot;</span>
+                        {{ noticia.data }}
+                    </span>
+                    <a href="{{ noticia.url }}" class="ler-mais" target="_blank" rel="noopener noreferrer">Ler mais
+                        &rarr;</a>
+                </div>
+            </article>
+            {% else %}
+            <article class="noticia noticia-vazia">
+                <p>Sem notícias disponíveis de momento.
+                    <a href="/atualizar_noticias">Atualizar feed</a>
+                </p>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+</div>
 {% endblock %}

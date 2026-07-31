@@ -11,14 +11,16 @@
     <section class="form-card">
         <form method="POST" action="/inflacao">
             {% if erro %}
-            <div style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <div
+                style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 ⚠️ {{ erro }}
             </div>
             {% endif %}
 
             <div class="input-group full-width">
                 <label>Data de referência</label>
-                <input type="text" value="Último dado disponível" disabled style="background:#f3f4f6; cursor:not-allowed;">
+                <input type="text" value="Último dado disponível" disabled
+                    style="background:#f3f4f6; cursor:not-allowed;">
             </div>
 
             <button type="submit" class="btn-main">Consultar Inflação</button>
@@ -44,9 +46,12 @@
                 {% endif %}
             </div>
 
-            <div class="bmc-container" style="text-align: center; margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 10px; border: 1px solid #059669;">
+            <div class="bmc-container"
+                style="text-align: center; margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 10px; border: 1px solid #059669;">
                 <p style="margin: 0 0 10px 0; color: #374151; font-size: 0.95rem;">Esta calculadora foi útil?</p>
-                <a href="https://www.buymeacoffee.com/ondoreoku" target="_blank" style="display: inline-block; background: #059669; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">Paga-me um café</a>
+                <a href="https://www.buymeacoffee.com/ondoreoku" target="_blank"
+                    style="display: inline-block; background: #059669; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">Paga-me
+                    um café</a>
             </div>
         </div>
         {% endif %}

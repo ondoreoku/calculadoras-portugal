@@ -12,7 +12,8 @@
         <!-- Adicionado o ID ao form -->
         <form id="form-poupanca" method="POST" action="/poupanca">
             {% if erro %}
-            <div style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <div
+                style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 ⚠️ {{ erro }}
             </div>
             {% endif %}
@@ -20,19 +21,23 @@
             <div class="grid">
                 <div class="input-group">
                     <label>Valor Inicial (€)</label>
-                    <input type="number" name="capital_inicial" id="capital_inicial" step="0.01" min="0" required value="1000" placeholder="Ex: 1000">
+                    <input type="number" name="capital_inicial" id="capital_inicial" step="0.01" min="0" required
+                        value="1000" placeholder="Ex: 1000">
                 </div>
                 <div class="input-group">
                     <label>Contribuição Mensal (€)</label>
-                    <input type="number" name="contribuicao_mensal" id="contribuicao_mensal" step="0.01" min="0" value="100" placeholder="Ex: 100">
+                    <input type="number" name="contribuicao_mensal" id="contribuicao_mensal" step="0.01" min="0"
+                        value="100" placeholder="Ex: 100">
                 </div>
                 <div class="input-group">
                     <label>Taxa de Juro Anual (%)</label>
-                    <input type="number" name="taxa_juro" id="taxa_juro" step="0.01" min="0" required value="5" placeholder="Ex: 5">
+                    <input type="number" name="taxa_juro" id="taxa_juro" step="0.01" min="0" required value="5"
+                        placeholder="Ex: 5">
                 </div>
                 <div class="input-group">
                     <label>Período (anos)</label>
-                    <input type="number" name="periodo" id="periodo" step="1" min="1" required value="10" placeholder="Ex: 10">
+                    <input type="number" name="periodo" id="periodo" step="1" min="1" required value="10"
+                        placeholder="Ex: 10">
                 </div>
             </div>
 
@@ -71,17 +76,18 @@
 
             <div style="text-align:center;margin-top:20px;">
                 <!-- Botão dinâmico injetado com ID -->
-                <a href="#" 
-                   id="btn-pdf-poupanca" 
-                   target="_blank" 
-                   style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
-                   📄 Baixar PDF dos Resultados
+                <a href="#" id="btn-pdf-poupanca" target="_blank"
+                    style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
+                    📄 Baixar PDF dos Resultados
                 </a>
             </div>
 
-            <div class="bmc-container" style="text-align: center; margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 10px; border: 1px solid #059669;">
+            <div class="bmc-container"
+                style="text-align: center; margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 10px; border: 1px solid #059669;">
                 <p style="margin: 0 0 10px 0; color: #374151; font-size: 0.95rem;">Esta calculadora foi útil?</p>
-                <a href="https://www.buymeacoffee.com/ondoreoku" target="_blank" style="display: inline-block; background: #059669; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">Paga-me um café</a>
+                <a href="https://www.buymeacoffee.com/ondoreoku" target="_blank"
+                    style="display: inline-block; background: #059669; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">Paga-me
+                    um café</a>
             </div>
         </div>
         {% endif %}
@@ -90,7 +96,7 @@
 
 <script>
     // Armazena as variáveis no sessionStorage na submissão do formulário
-    document.getElementById('form-poupanca').addEventListener('submit', function() {
+    document.getElementById('form-poupanca').addEventListener('submit', function () {
         sessionStorage.setItem('poupa_capital', document.getElementById('capital_inicial').value);
         sessionStorage.setItem('poupa_mensal', document.getElementById('contribuicao_mensal').value);
         sessionStorage.setItem('poupa_juro', document.getElementById('taxa_juro').value);
@@ -98,7 +104,7 @@
     });
 
     // Repõe os valores digitados após o recarregamento da página
-    window.addEventListener('DOMContentLoaded', function() {
+    window.addEventListener('DOMContentLoaded', function () {
         if (sessionStorage.getItem('poupa_capital')) document.getElementById('capital_inicial').value = sessionStorage.getItem('poupa_capital');
         if (sessionStorage.getItem('poupa_mensal')) document.getElementById('contribuicao_mensal').value = sessionStorage.getItem('poupa_mensal');
         if (sessionStorage.getItem('poupa_juro')) document.getElementById('taxa_juro').value = sessionStorage.getItem('poupa_juro');
@@ -107,7 +113,7 @@
         // Configuração dinâmica do URL do PDF
         const btnPdf = document.getElementById('btn-pdf-poupanca');
         if (btnPdf) {
-            btnPdf.addEventListener('click', function(e) {
+            btnPdf.addEventListener('click', function (e) {
                 e.preventDefault();
 
                 const capital = document.getElementById('capital_inicial').value;

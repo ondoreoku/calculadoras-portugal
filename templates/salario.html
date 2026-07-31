@@ -72,20 +72,13 @@
             
             <div style="text-align:center;margin-top:15px;">
                 {% if resultado %}
-                    <!-- Botão dinâmico controlado por JavaScript -->
+                    <!-- O botão só aparece quando existir um resultado da simulação -->
                     <a href="#" 
                        id="btn-pdf-salario"
                        target="_blank" 
                        style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
                        📄 Baixar PDF dos Resultados
                     </a>
-                {% else %}
-                    <a href="/salario/pdf?salario_bruto=1500&regime=outrem&subsidio_alimentacao=6.0&estado_civil=solteiro" 
-                       target="_blank" 
-                       style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
-                       📄 Baixar PDF Exemplo
-                    </a>
-                    <span style="color:#6b7280;font-size:0.8rem;margin-left:10px;">(exemplo padrão com 1500€)</span>
                 {% endif %}
             </div>
 

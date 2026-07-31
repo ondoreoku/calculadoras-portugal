@@ -12,7 +12,8 @@
         <!-- Form atualizado com ID e todos os campos requeridos pela lógica local -->
         <form id="form-iuc" method="POST" action="/iuc">
             {% if erro %}
-            <div style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <div
+                style="background: #fee; border: 1px solid #c00; color: #c00; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                 ⚠️ {{ erro }}
             </div>
             {% endif %}
@@ -24,7 +25,8 @@
                 </div>
                 <div class="input-group">
                     <label>Cilindrada (cc)</label>
-                    <input type="number" name="cilindrada" id="cilindrada" min="1" required value="1500" placeholder="Ex: 1498">
+                    <input type="number" name="cilindrada" id="cilindrada" min="1" required value="1500"
+                        placeholder="Ex: 1498">
                 </div>
                 <div class="input-group">
                     <label>Emissões CO₂ (g/km)</label>
@@ -51,13 +53,16 @@
                 </div>
                 <div class="res-card">
                     <small>Categoria do Veículo</small>
-                    <div class="big-val" style="color: #3b82f6; font-size: 1.1rem; padding-top: 8px;">{{ resultado.category }}</div>
+                    <div class="big-val" style="color: #3b82f6; font-size: 1.1rem; padding-top: 8px;">{{
+                        resultado.category }}</div>
                 </div>
             </div>
 
             <div class="info-extra">
-                <p><strong>Parcela Cilindrada:</strong> €{{ "%.2f"|format(resultado.taxa_cilindrada) if resultado.taxa_cilindrada else 0 }}</p>
-                <p><strong>Parcela CO₂:</strong> €{{ "%.2f"|format(resultado.taxa_co2) if resultado.taxa_co2 else 0 }}</p>
+                <p><strong>Parcela Cilindrada:</strong> €{{ "%.2f"|format(resultado.taxa_cilindrada) if
+                    resultado.taxa_cilindrada else 0 }}</p>
+                <p><strong>Parcela CO₂:</strong> €{{ "%.2f"|format(resultado.taxa_co2) if resultado.taxa_co2 else 0 }}
+                </p>
                 <p><strong>Coeficiente por Ano:</strong> x{{ resultado.coef if resultado.coef else 1.0 }}</p>
                 {% if resultado.nota %}
                 <p style="color: #059669;"><strong>Nota:</strong> {{ resultado.nota }}</p>
@@ -66,17 +71,18 @@
 
             <!-- Adicionado o botão para fazer o download do PDF -->
             <div style="text-align:center;margin-top:20px;">
-                <a href="#" 
-                   id="btn-pdf-iuc" 
-                   target="_blank" 
-                   style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
-                   📄 Baixar PDF dos Resultados
+                <a href="#" id="btn-pdf-iuc" target="_blank"
+                    style="display:inline-block;background:#2563eb;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">
+                    📄 Baixar PDF dos Resultados
                 </a>
             </div>
 
-            <div class="bmc-container" style="text-align: center; margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 10px; border: 1px solid #059669;">
+            <div class="bmc-container"
+                style="text-align: center; margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 10px; border: 1px solid #059669;">
                 <p style="margin: 0 0 10px 0; color: #374151; font-size: 0.95rem;">Esta calculadora foi útil?</p>
-                <a href="https://www.buymeacoffee.com/ondoreoku" target="_blank" style="display: inline-block; background: #059669; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">Paga-me um café</a>
+                <a href="https://www.buymeacoffee.com/ondoreoku" target="_blank"
+                    style="display: inline-block; background: #059669; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.9rem;">Paga-me
+                    um café</a>
             </div>
         </div>
         {% endif %}
@@ -85,7 +91,7 @@
 
 <script>
     // Salva todas as variáveis introduzidas no sessionStorage aquando da submissão
-    document.getElementById('form-iuc').addEventListener('submit', function() {
+    document.getElementById('form-iuc').addEventListener('submit', function () {
         sessionStorage.setItem('iuc_ano', document.getElementById('ano').value);
         sessionStorage.setItem('iuc_cilindrada', document.getElementById('cilindrada').value);
         sessionStorage.setItem('iuc_co2', document.getElementById('co2').value);
@@ -93,7 +99,7 @@
     });
 
     // Repõe os valores digitados após o recarregamento
-    window.addEventListener('DOMContentLoaded', function() {
+    window.addEventListener('DOMContentLoaded', function () {
         if (sessionStorage.getItem('iuc_ano')) document.getElementById('ano').value = sessionStorage.getItem('iuc_ano');
         if (sessionStorage.getItem('iuc_cilindrada')) document.getElementById('cilindrada').value = sessionStorage.getItem('iuc_cilindrada');
         if (sessionStorage.getItem('iuc_co2')) document.getElementById('co2').value = sessionStorage.getItem('iuc_co2');
@@ -102,7 +108,7 @@
         // Configuração dinâmica da rota do PDF com todos os parâmetros
         const btnPdf = document.getElementById('btn-pdf-iuc');
         if (btnPdf) {
-            btnPdf.addEventListener('click', function(e) {
+            btnPdf.addEventListener('click', function (e) {
                 e.preventDefault();
 
                 const ano = document.getElementById('ano').value;
